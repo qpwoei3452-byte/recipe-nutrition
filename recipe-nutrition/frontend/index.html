@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 레시피 추천</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=300">
+</head>
+<body>
+    <div class="app-wrap">
+        <header class="app-header">
+            <h1 class="app-title">나만의 <em>맞춤</em> 레시피 추천</h1>
+            <button id="settingsBtn" class="settings-btn" title="선호도 설정" style="display:none;">⚙️ 선호도 설정</button>
+        </header>
+
+        <!-- 온보딩: 첫 진입 시 선호도 1회 설정 (회원가입 단계에 해당) -->
+        <section id="onboarding" class="onboarding" style="display:none;">
+            <div class="onboarding-card">
+                <h2 class="onboarding-title">당신에게 맞는 추천을 위해<br>알려주세요</h2>
+                <p class="onboarding-sub">각 항목이 얼마나 중요한지 설정하면, 이후엔 검색만 해도 자동으로 맞춤 추천을 받아요. 사용할수록 선택 기록을 학습해 더 정교해집니다.</p>
+
+                <div class="pref-sliders" id="onboardSliders">
+                    <div class="pref-row">
+                        <label>💰 가격</label>
+                        <div class="slider-wrap">
+                            <span class="slider-end">낮음</span>
+                            <input type="range" min="0" max="100" value="25" class="pref-slider" data-key="price">
+                            <span class="slider-end">높음</span>
+                        </div>
+                        <span class="pref-val" data-for="price">25%</span>
+                    </div>
+                    <div class="pref-row">
+                        <label>💪 단백질</label>
+                        <div class="slider-wrap">
+                            <span class="slider-end">낮음</span>
+                            <input type="range" min="0" max="100" value="22" class="pref-slider" data-key="protein">
+                            <span class="slider-end">높음</span>
+                        </div>
+                        <span class="pref-val" data-for="protein">22%</span>
+                    </div>
+                    <div class="pref-row">
+                        <label>🔥 칼로리</label>
+                        <div class="slider-wrap">
+                            <span class="slider-end">낮음</span>
+                            <input type="range" min="0" max="100" value="18" class="pref-slider" data-key="calorie">
+                            <span class="slider-end">높음</span>
+                        </div>
+                        <span class="pref-val" data-for="calorie">18%</span>
+                    </div>
+                    <div class="pref-row">
+                        <label>🧂 나트륨</label>
+                        <div class="slider-wrap">
+                            <span class="slider-end">낮음</span>
+                            <input type="range" min="0" max="100" value="15" class="pref-slider" data-key="sodium">
+                            <span class="slider-end">높음</span>
+                        </div>
+                        <span class="pref-val" data-for="sodium">15%</span>
+                    </div>
+                    <div class="pref-row">
+                        <label>⏱️ 조리시간</label>
+                        <div class="slider-wrap">
+                            <span class="slider-end">낮음</span>
+                            <input type="range" min="0" max="100" value="20" class="pref-slider" data-key="time">
+                            <span class="slider-end">높음</span>
+                        </div>
+                        <span class="pref-val" data-for="time">20%</span>
+                    </div>
+                </div>
+
+                <div class="slider-total-row">
+                    <span class="slider-total-label">합계</span>
+                    <div class="slider-total-bar-bg">
+                        <div class="slider-total-bar-fill" id="onboardTotalBar"></div>
+                    </div>
+                    <span class="slider-total-val" id="onboardTotal">100</span>
+                    <span class="slider-total-unit">%</span>
+                </div>
+
+                <div class="onboard-presets">
+                    <span class="preset-label">빠른 설정:</span>
+                    <button class="preset-btn" data-preset="가성비">가성비형</button>
+                    <button class="preset-btn" data-preset="고단백">고단백형</button>
+                    <button class="preset-btn" data-preset="저칼로리">저칼로리형</button>
+                    <button class="preset-btn" data-preset="기본">균형형</button>
+                </div>
+
+                <div class="onboard-actions">
+                    <button id="onboardSkip" class="btn-secondary">건너뛰기 (균형 추천)</button>
+                    <button id="onboardSave" class="btn-primary">이 설정으로 시작하기</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 메인: 모드 선택 없이 검색만 → 자동 맞춤 추천 -->
+        <section id="mainSection" class="search-section" style="display:none;">
+            <div class="my-profile-bar" id="myProfileBar"></div>
+            <div class="search-box">
+                <input type="text" id="searchInput" class="search-input" placeholder="재료·음식명 검색 (비워두면 내 취향 전체 추천)" />
+                <button id="searchBtn" class="search-btn">검색</button>
+            </div>
+
+            <!-- 최근 먹은 음식 입력 패널 (직접 입력 → 다양성 패널티에 사용) -->
+            <div class="history-panel" id="historyPanel">
+              <div class="history-header">
+                <span class="history-title">🍽️ 최근 먹은 음식</span>
+                <span class="history-hint">입력하면 비슷한 음식의 추천 순위가 낮아져요</span>
+              </div>
+              <div class="history-input-row">
+                <input type="text" id="historyInput"
+                  class="history-input"
+                  placeholder="예: 김치찌개, 된장국, 계란볶음밥">
+                <button class="history-add-btn" id="historyAddBtn">추가</button>
+              </div>
+              <div class="history-tags" id="historyTags">
+                <span class="history-empty">아직 입력된 음식이 없어요</span>
+              </div>
+            </div>
+            <!-- 알레르기 필터 -->
+            <div class="history-panel" id="allergyPanel">
+              <div class="history-header">
+                <span class="history-title">⚠️ 알레르기 설정</span>
+                <span class="history-hint">선택한 재료가 포함된 레시피를 제외해요</span>
+              </div>
+              <div class="allergy-chips" id="allergyChips">
+                <label class="allergy-chip"><input type="checkbox" value="알류"> 알류(달걀)</label>
+                <label class="allergy-chip"><input type="checkbox" value="우유"> 우유</label>
+                <label class="allergy-chip"><input type="checkbox" value="메밀"> 메밀</label>
+                <label class="allergy-chip"><input type="checkbox" value="땅콩"> 땅콩</label>
+                <label class="allergy-chip"><input type="checkbox" value="대두"> 대두(콩)</label>
+                <label class="allergy-chip"><input type="checkbox" value="밀"> 밀</label>
+                <label class="allergy-chip"><input type="checkbox" value="고등어"> 고등어</label>
+                <label class="allergy-chip"><input type="checkbox" value="게"> 게</label>
+                <label class="allergy-chip"><input type="checkbox" value="새우"> 새우</label>
+                <label class="allergy-chip"><input type="checkbox" value="돼지고기"> 돼지고기</label>
+                <label class="allergy-chip"><input type="checkbox" value="복숭아"> 복숭아</label>
+                <label class="allergy-chip"><input type="checkbox" value="토마토"> 토마토</label>
+                <label class="allergy-chip"><input type="checkbox" value="아황산류"> 아황산류</label>
+                <label class="allergy-chip"><input type="checkbox" value="호두"> 호두</label>
+                <label class="allergy-chip"><input type="checkbox" value="닭고기"> 닭고기</label>
+                <label class="allergy-chip"><input type="checkbox" value="쇠고기"> 쇠고기</label>
+                <label class="allergy-chip"><input type="checkbox" value="오징어"> 오징어</label>
+                <label class="allergy-chip"><input type="checkbox" value="조개류"> 조개류</label>
+                <label class="allergy-chip"><input type="checkbox" value="잣"> 잣</label>
+                <label class="allergy-chip"><input type="checkbox" value="아몬드"> 아몬드</label>
+                <label class="allergy-chip"><input type="checkbox" value="캐슈넛"> 캐슈넛</label>
+                <label class="allergy-chip"><input type="checkbox" value="피스타치오"> 피스타치오</label>
+              </div>
+            </div>
+        </section>
+
+        <div id="recipeListArea"></div>
+        <div id="detailArea"></div>
+    </div>
+
+    <!-- 설정 모달: 언제든 가중치 재조정 -->
+    <div id="settingsModal" class="modal-overlay" style="display:none;">
+        <div class="modal-card">
+            <h2 class="modal-title">선호도 설정 변경</h2>
+            <p class="modal-sub">중요도를 조정하면 추천 결과가 바뀝니다.</p>
+            <div class="pref-sliders" id="settingsSliders">
+                <div class="pref-row">
+                    <label>💰 가격</label>
+                    <div class="slider-wrap">
+                        <span class="slider-end">낮음</span>
+                        <input type="range" min="0" max="100" value="25" class="pref-slider" data-key="price">
+                        <span class="slider-end">높음</span>
+                    </div>
+                    <span class="pref-val" data-for="price">25%</span>
+                </div>
+                <div class="pref-row">
+                    <label>💪 단백질</label>
+                    <div class="slider-wrap">
+                        <span class="slider-end">낮음</span>
+                        <input type="range" min="0" max="100" value="22" class="pref-slider" data-key="protein">
+                        <span class="slider-end">높음</span>
+                    </div>
+                    <span class="pref-val" data-for="protein">22%</span>
+                </div>
+                <div class="pref-row">
+                    <label>🔥 칼로리</label>
+                    <div class="slider-wrap">
+                        <span class="slider-end">낮음</span>
+                        <input type="range" min="0" max="100" value="18" class="pref-slider" data-key="calorie">
+                        <span class="slider-end">높음</span>
+                    </div>
+                    <span class="pref-val" data-for="calorie">18%</span>
+                </div>
+                <div class="pref-row">
+                    <label>🧂 나트륨</label>
+                    <div class="slider-wrap">
+                        <span class="slider-end">낮음</span>
+                        <input type="range" min="0" max="100" value="15" class="pref-slider" data-key="sodium">
+                        <span class="slider-end">높음</span>
+                    </div>
+                    <span class="pref-val" data-for="sodium">15%</span>
+                </div>
+                <div class="pref-row">
+                    <label>⏱️ 조리시간</label>
+                    <div class="slider-wrap">
+                        <span class="slider-end">낮음</span>
+                        <input type="range" min="0" max="100" value="20" class="pref-slider" data-key="time">
+                        <span class="slider-end">높음</span>
+                    </div>
+                    <span class="pref-val" data-for="time">20%</span>
+                </div>
+            </div>
+
+            <div class="slider-total-row">
+                <span class="slider-total-label">합계</span>
+                <div class="slider-total-bar-bg">
+                    <div class="slider-total-bar-fill" id="settingsTotalBar"></div>
+                </div>
+                <span class="slider-total-val" id="settingsTotal">100</span>
+                <span class="slider-total-unit">%</span>
+            </div>
+
+            <div class="modal-actions">
+                <button id="settingsCancel" class="btn-secondary">취소</button>
+                <button id="settingsSave" class="btn-primary">저장하고 다시 추천</button>
+            </div>
+        </div>
+    </div>
+
+    <!--
+      ★★★ features.js fetch 인터셉터 ★★★
+      /api/recipe/recommend 호출 시 냉장고·시간대 파라미터를 자동 주입.
+      api.js 수정 없이 동작함.
+    -->
+    <script>
+    (function () {
+        var _origFetch = window.fetch;
+        window.fetch = function (url, options) {
+            if (typeof url === 'string' && url.includes('/api/recipe/recommend')) {
+                try {
+                    var extra = (typeof window.buildExtraParams === 'function')
+                        ? window.buildExtraParams() : '';
+                    if (extra) {
+                        url = url + (url.includes('?') ? '&' : '?') + extra;
+                    }
+                } catch (e) { /* features.js 미로드 시 무시 */ }
+            }
+            return _origFetch.call(this, url, options);
+        };
+    })();
+    </script>
+
+    <!-- ★★★ features.js: 6가지 편의기능 ★★★ -->
+    <script src="/static/features.js"></script>
+
+    <script type="module">
+        import {
+            recommendRecipes, aiAnalyzeRecipe, getRecipeDetail,
+            createProfile, getProfile, updateProfileWeights, logFood
+        } from '/static/js/api.js?v=301';
+        import { renderRecipeList, renderLoading, renderDetail, renderError } from '/static/js/render.js?v=301';
+
+        const PRESETS = {
+            '가성비':   { price: 40, protein: 18, calorie: 10, sodium: 7,  time: 25 },
+            '고단백':   { price: 18, protein: 42, calorie: 15, sodium: 10, time: 15 },
+            '저칼로리': { price: 15, protein: 18, calorie: 40, sodium: 15, time: 12 },
+            '저염':     { price: 15, protein: 20, calorie: 15, sodium: 40, time: 10 },
+            '기본':     { price: 25, protein: 22, calorie: 18, sodium: 15, time: 20 },
+        };
+        const KEY_LABEL = { price: '가격', protein: '단백질', calorie: '칼로리', sodium: '나트륨', time: '조리시간' };
+
+        // 브라우저엔 user_id 만 저장. 실제 프로필(가중치+로그)은 백엔드가 관리.
+        const UID_KEY = 'recipeUserId_v1';
+        const getUid = () => { try { return localStorage.getItem(UID_KEY); } catch { return null; } };
+        const setUid = (id) => { try { localStorage.setItem(UID_KEY, id); } catch {} };
+
+        function normalize(raw) {
+            const total = (raw.price + raw.protein + raw.calorie + raw.sodium + raw.time) || 1;
+            return {
+                price:   +(raw.price   / total).toFixed(4),
+                protein: +(raw.protein / total).toFixed(4),
+                calorie: +(raw.calorie / total).toFixed(4),
+                sodium:  +(raw.sodium  / total).toFixed(4),
+                time:    +(raw.time    / total).toFixed(4),
+            };
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const onboarding   = document.getElementById('onboarding');
+            const mainSection  = document.getElementById('mainSection');
+            const settingsBtn  = document.getElementById('settingsBtn');
+            const settingsModal= document.getElementById('settingsModal');
+            const profileBar   = document.getElementById('myProfileBar');
+            const sIn = document.getElementById('searchInput');
+            const sBt = document.getElementById('searchBtn');
+            const lAr = document.getElementById('recipeListArea');
+            const dAr = document.getElementById('detailArea');
+
+            let userId = getUid();
+            let currentWeights = null;       // 0~1 정규화된 현재 가중치
+            let personalizedByLog = false;   // 로그 보정 작동 여부
+
+            // 사용자가 직접 입력한 "최근 먹은 음식" — localStorage 영구 저장 (새로고침해도 유지)
+            const HISTORY_KEY = 'recipe_food_history_v1';
+            function loadFoodHistory() {
+                try {
+                    const raw = localStorage.getItem(HISTORY_KEY);
+                    if (!raw) return [];
+                    const arr = JSON.parse(raw);
+                    return Array.isArray(arr) ? arr.filter(x => typeof x === 'string') : [];
+                } catch { return []; }
+            }
+            function saveFoodHistory() {
+                try { localStorage.setItem(HISTORY_KEY, JSON.stringify(foodHistory)); }
+                catch (e) { console.error('[history 저장 실패]', e); }
+            }
+            let foodHistory = loadFoodHistory();
+
+            function bindSliders(scopeEl) {
+                const sliders = scopeEl.querySelectorAll('.pref-slider');
+                const totalEl = scopeEl.querySelector('#onboardTotal, #settingsTotal');
+                const totalBar = scopeEl.querySelector('#onboardTotalBar, #settingsTotalBar');
+                function refresh() {
+                    let sum = 0;
+                    sliders.forEach(s => sum += parseInt(s.value, 10));
+                    sliders.forEach(s => {
+                        const valEl = scopeEl.querySelector(`.pref-val[data-for="${s.dataset.key}"]`);
+                        if (valEl) valEl.textContent = s.value + '%';
+                    });
+                    if (totalEl) totalEl.textContent = sum;
+                    if (totalBar) {
+                        totalBar.style.width = Math.min(sum, 100) + '%';
+                        let barColor, valColor;
+                        if (sum === 0)        { barColor = '#d1d5db'; valColor = '#6b7280'; }
+                        else if (sum <= 100)  { barColor = '#22c55e'; valColor = '#15803d'; }
+                        else                  { barColor = '#ef4444'; valColor = '#b91c1c'; }
+                        totalBar.style.background = barColor;
+                        if (totalEl) totalEl.style.color = valColor;
+                    }
+                }
+                sliders.forEach(s => s.oninput = refresh);
+                refresh();
+                return {
+                    getRaw() {
+                        const raw = {};
+                        sliders.forEach(s => raw[s.dataset.key] = parseInt(s.value, 10));
+                        return raw;
+                    },
+                    setRaw(raw) {
+                        sliders.forEach(s => { if (raw[s.dataset.key] != null) s.value = raw[s.dataset.key]; });
+                        refresh();
+                    }
+                };
+            }
+
+            const onboardCtl = bindSliders(document.getElementById('onboarding'));
+            document.querySelectorAll('#onboarding .preset-btn').forEach(btn => {
+                btn.onclick = () => onboardCtl.setRaw(PRESETS[btn.dataset.preset]);
+            });
+
+            const onboardSaveBtn = document.getElementById('onboardSave');
+            function checkOnboardValid() {
+                const raw = onboardCtl.getRaw();
+                const sum = raw.price + raw.protein + raw.calorie + raw.sodium + raw.time;
+                onboardSaveBtn.disabled = (sum === 0);
+                onboardSaveBtn.textContent = (sum === 0)
+                    ? '최소 한 항목은 0보다 크게 설정하세요'
+                    : '이 설정으로 시작하기';
+            }
+            document.querySelectorAll('#onboarding .pref-slider').forEach(s => {
+                s.addEventListener('input', checkOnboardValid);
+            });
+            checkOnboardValid();
+
+            async function createAndEnter(rawWeights) {
+                currentWeights = normalize(rawWeights);
+                try {
+                    const profile = await createProfile(currentWeights);
+                    userId = profile.user_id;
+                    setUid(userId);
+                    currentWeights = profile.weights;
+                } catch (e) {
+                    console.error('[프로필 생성 실패, 로컬 가중치로 진행]', e);
+                }
+                enterMain();
+            }
+
+            document.getElementById('onboardSave').onclick = () => createAndEnter(onboardCtl.getRaw());
+            document.getElementById('onboardSkip').onclick = () => createAndEnter(PRESETS['기본']);
+
+            // 설정 모달
+            const settingsCtl = bindSliders(document.getElementById('settingsModal'));
+            settingsBtn.onclick = () => {
+                if (currentWeights) {
+                    settingsCtl.setRaw({
+                        price:   Math.round((currentWeights.price   ?? 0) * 100),
+                        protein: Math.round((currentWeights.protein ?? 0) * 100),
+                        calorie: Math.round((currentWeights.calorie ?? 0) * 100),
+                        sodium:  Math.round((currentWeights.sodium  ?? 0) * 100),
+                        time:    Math.round((currentWeights.time    ?? 0) * 100),
+                    });
+                }
+                settingsModal.style.display = 'flex';
+            };
+            document.getElementById('settingsCancel').onclick = () => settingsModal.style.display = 'none';
+            document.getElementById('settingsSave').onclick = async () => {
+                currentWeights = normalize(settingsCtl.getRaw());
+                if (userId) {
+                    try {
+                        const p = await updateProfileWeights(userId, currentWeights);
+                        currentWeights = p.weights;
+                    } catch (e) { console.error('[가중치 저장 실패]', e); }
+                }
+                settingsModal.style.display = 'none';
+                renderProfileBar();
+                runSearch();
+            };
+
+            function renderProfileBar() {
+                if (!currentWeights) return;
+                const pct = k => Math.round((currentWeights[k] ?? 0) * 100);
+                const ordered = Object.keys(KEY_LABEL).sort((a, b) => (currentWeights[b] ?? 0) - (currentWeights[a] ?? 0));
+                const chips = ordered.map(k => `<span class="prof-chip">${KEY_LABEL[k]} ${pct(k)}%</span>`).join('');
+                const logBadge = personalizedByLog
+                    ? `<span class="prof-log-badge">📈 선택 기록 학습 반영됨</span>` : '';
+                profileBar.innerHTML = `<span class="prof-label">내 추천 기준</span> ${chips} ${logBadge}`;
+            }
+
+            function enterMain() {
+                onboarding.style.display  = 'none';
+                mainSection.style.display = 'block';
+                settingsBtn.style.display = 'inline-flex';
+                renderProfileBar();
+                runSearch();
+            }
+
+            async function runSearch() {
+                dAr.innerHTML = '';
+                const isBrowse = !sIn.value.trim();
+                renderLoading(lAr, isBrowse
+                    ? '내 취향에 맞는 추천을 준비하는 중...'
+                    : '나의 선호도 기준으로 추천 점수 계산 중...');
+                sBt.disabled = true;
+                sBt.textContent = '검색 중...';
+                try {
+                    const opts = userId ? { userId } : { weights: currentWeights };
+                    if (foodHistory.length > 0) opts.history = foodHistory;
+                    const checkedAllergens = [...document.querySelectorAll('#allergyChips input:checked')].map(el => el.value);
+                    if (checkedAllergens.length) opts.allergens = checkedAllergens;
+                    // fetch 인터셉터가 자동으로 time_slot·fridge 파라미터를 주입합니다
+                    const data = await recommendRecipes(sIn.value, '기본', 20, opts);
+                    personalizedByLog = data.length > 0 && data[0].personalized_by_log === true;
+                    renderProfileBar();
+                    renderRecipeList(data, lAr, runSelect, '맞춤');
+                    // 별점·즐겨찾기 버튼 주입 (렌더 완료 후 0.3초 대기)
+                    setTimeout(() => { window.featuresScanCards && window.featuresScanCards(); }, 300);
+                } catch (e) {
+                    console.error('[검색 오류]', e);
+                    renderError(lAr, '검색 실패: ' + e.message);
+                } finally {
+                    sBt.disabled = false;
+                    sBt.textContent = '검색';
+                }
+            }
+
+            // ── 최근 먹은 음식 (직접 입력) ───────────────────────────
+            function _escapeHtml(s) {
+                return String(s).replace(/[&<>"']/g, c => ({
+                    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+                }[c]));
+            }
+            function renderHistoryTags() {
+                const container = document.getElementById('historyTags');
+                if (foodHistory.length === 0) {
+                    container.innerHTML = '<span class="history-empty">아직 입력된 음식이 없어요</span>';
+                    return;
+                }
+                const tags = foodHistory.map(f => {
+                    const safe = _escapeHtml(f);
+                    return `
+                    <span class="history-tag">
+                        ${safe}
+                        <button class="history-tag-del" data-food="${safe}">×</button>
+                    </span>`;
+                }).join('');
+                container.innerHTML = tags +
+                    `<button class="history-clear-btn" id="historyClearBtn">전체 지우기</button>`;
+
+                container.querySelectorAll('.history-tag-del').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const food = btn.getAttribute('data-food');
+                        const txt = document.createElement('textarea');
+                        txt.innerHTML = food;
+                        const decoded = txt.value;
+                        foodHistory = foodHistory.filter(f => f !== decoded);
+                        saveFoodHistory();
+                        renderHistoryTags();
+                        runSearch();
+                    });
+                });
+
+                const clearBtn = document.getElementById('historyClearBtn');
+                if (clearBtn) clearBtn.addEventListener('click', () => {
+                    if (foodHistory.length === 0) return;
+                    if (!confirm('입력한 음식을 모두 지울까요?')) return;
+                    foodHistory = [];
+                    saveFoodHistory();
+                    renderHistoryTags();
+                    runSearch();
+                });
+            }
+
+            function addHistory() {
+                const input = document.getElementById('historyInput');
+                const raw   = input.value.trim();
+                if (!raw) return;
+                let changed = false;
+                raw.split(',').map(s => s.trim()).filter(s => s).forEach(item => {
+                    const clipped = item.slice(0, 30);
+                    if (clipped && !foodHistory.includes(clipped) && foodHistory.length < 20) {
+                        foodHistory.push(clipped);
+                        changed = true;
+                    }
+                });
+                input.value = '';
+                renderHistoryTags();
+                if (changed) {
+                    saveFoodHistory();
+                    runSearch();
+                }
+            }
+
+            async function runSelect(recipe) {
+                dAr.innerHTML = '';
+                renderLoading(dAr, '레시피 정보를 불러오는 중...');
+                dAr.scrollIntoView({ behavior: 'smooth' });
+                try {
+                    const recipeId = recipe.id ?? recipe.RCP_SEQ ?? '';
+                    const name     = recipe.name ?? recipe.RCP_NM ?? '';
+
+                    const detail = await getRecipeDetail(recipeId, name);
+                    detail.score  = recipe.score;
+                    detail.mode   = recipe.mode;
+                    detail.reason = recipe.reason;
+                    detail._scores = { ...(recipe._scores || {}) };
+
+                    if (detail.cook_time_min && detail.cook_time_min > 0) {
+                        const MAX_TIME  = 60;
+                        const timeScore = Math.max(0, parseFloat((1 - detail.cook_time_min / MAX_TIME).toFixed(4)));
+                        detail._scores.time = timeScore;
+                    }
+
+                    renderDetail(detail, dAr);
+
+                    if (userId && name) {
+                        try { await logFood(userId, name); } catch (e) { console.error('[로그 실패]', e); }
+                    }
+
+                    (async () => {
+                        try {
+                            let historyNames = [];
+                            if (userId) {
+                                try {
+                                    const p = await getProfile(userId);
+                                    historyNames = (p.food_log || []).map(e => e.name);
+                                } catch {}
+                            }
+                            const ai = await aiAnalyzeRecipe(recipeId, name, historyNames);
+                            if (ai && ai.cook_time_min) {
+                                detail.cook_time_min        = ai.cook_time_min;
+                                detail.cook_time_source     = ai.cook_time_source;
+                                detail.diet_similarity      = ai.diet_similarity;
+                                detail.diet_similarity_reason = ai.diet_similarity_reason;
+                                if (ai.recommendation_reason) detail.recommendation_reason = ai.recommendation_reason;
+                                const MAX_TIME = 60;
+                                detail._scores.time = Math.max(0, parseFloat((1 - ai.cook_time_min / MAX_TIME).toFixed(4)));
+                                renderDetail(detail, dAr);
+                            }
+                        } catch (e) {
+                            console.error('[AI 분석 백그라운드 오류]', e);
+                        }
+                    })();
+                } catch (e) {
+                    console.error('[상세 조회 오류]', e);
+                    renderDetail(recipe, dAr);
+                }
+            }
+
+            if (sBt) sBt.onclick = runSearch;
+            if (sIn) sIn.onkeydown = (e) => { if (e.key === 'Enter') runSearch(); };
+
+            const histBtn = document.getElementById('historyAddBtn');
+            const histInp = document.getElementById('historyInput');
+            if (histBtn) histBtn.addEventListener('click', addHistory);
+            if (histInp) histInp.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') addHistory();
+            });
+            renderHistoryTags();
+
+            // 진입 분기: 저장된 프로필 있으면 메인, 없으면 온보딩
+            if (userId) {
+                try {
+                    const p = await getProfile(userId);
+                    currentWeights = p.weights;
+                    enterMain();
+                } catch (e) {
+                    console.warn('[프로필 없음, 온보딩 표시]', e);
+                    onboarding.style.display = 'flex';
+                }
+            } else {
+                onboarding.style.display = 'flex';
+            }
+        });
+    </script>
+</body>
+</html>
