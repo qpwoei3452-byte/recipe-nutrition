@@ -99,7 +99,7 @@
                 <button id="searchBtn" class="search-btn">검색</button>
             </div>
 
-            <!-- 최근 먹은 음식 입력 패널 (직접 입력 → 다양성 패널티에 사용) -->
+            <!-- 최근 먹은 음식 입력 패널 -->
             <div class="history-panel" id="historyPanel">
               <div class="history-header">
                 <span class="history-title">🍽️ 최근 먹은 음식</span>
@@ -152,7 +152,7 @@
         <div id="detailArea"></div>
     </div>
 
-    <!-- 설정 모달: 언제든 가중치 재조정 -->
+    <!-- 설정 모달 -->
     <div id="settingsModal" class="modal-overlay" style="display:none;">
         <div class="modal-card">
             <h2 class="modal-title">선호도 설정 변경</h2>
@@ -224,7 +224,6 @@
     <!--
       ★★★ features.js fetch 인터셉터 ★★★
       /api/recipe/recommend 호출 시 냉장고·시간대 파라미터를 자동 주입.
-      api.js 수정 없이 동작함.
     -->
     <script>
     (function () {
@@ -245,14 +244,14 @@
     </script>
 
     <!-- ★★★ features.js: 6가지 편의기능 ★★★ -->
-    <script src="/static/features.js?v=302"></script>
+    <script src="/static/features.js?v=303"></script>
 
     <script type="module">
         import {
             recommendRecipes, aiAnalyzeRecipe, getRecipeDetail,
             createProfile, getProfile, updateProfileWeights, logFood
         } from '/static/js/api.js?v=301';
-        import { renderRecipeList, renderLoading, renderDetail, renderError } from '/static/js/render.js?v=301';
+        import { renderRecipeList, renderLoading, renderDetail, renderError } from '/static/js/render.js?v=302';
 
         const PRESETS = {
             '가성비':   { price: 40, protein: 18, calorie: 10, sodium: 7,  time: 25 },
@@ -263,7 +262,6 @@
         };
         const KEY_LABEL = { price: '가격', protein: '단백질', calorie: '칼로리', sodium: '나트륨', time: '조리시간' };
 
-        // 브라우저엔 user_id 만 저장. 실제 프로필(가중치+로그)은 백엔드가 관리.
         const UID_KEY = 'recipeUserId_v1';
         const getUid = () => { try { return localStorage.getItem(UID_KEY); } catch { return null; } };
         const setUid = (id) => { try { localStorage.setItem(UID_KEY, id); } catch {} };
@@ -291,10 +289,9 @@
             const dAr = document.getElementById('detailArea');
 
             let userId = getUid();
-            let currentWeights = null;       // 0~1 정규화된 현재 가중치
-            let personalizedByLog = false;   // 로그 보정 작동 여부
+            let currentWeights = null;
+            let personalizedByLog = false;
 
-            // 사용자가 직접 입력한 "최근 먹은 음식" — localStorage 영구 저장 (새로고침해도 유지)
             const HISTORY_KEY = 'recipe_food_history_v1';
             function loadFoodHistory() {
                 try {
@@ -382,7 +379,6 @@
             document.getElementById('onboardSave').onclick = () => createAndEnter(onboardCtl.getRaw());
             document.getElementById('onboardSkip').onclick = () => createAndEnter(PRESETS['기본']);
 
-            // 설정 모달
             const settingsCtl = bindSliders(document.getElementById('settingsModal'));
             settingsBtn.onclick = () => {
                 if (currentWeights) {
@@ -441,12 +437,10 @@
                     if (foodHistory.length > 0) opts.history = foodHistory;
                     const checkedAllergens = [...document.querySelectorAll('#allergyChips input:checked')].map(el => el.value);
                     if (checkedAllergens.length) opts.allergens = checkedAllergens;
-                    // fetch 인터셉터가 자동으로 time_slot·fridge 파라미터를 주입합니다
                     const data = await recommendRecipes(sIn.value, '기본', 20, opts);
                     personalizedByLog = data.length > 0 && data[0].personalized_by_log === true;
                     renderProfileBar();
                     renderRecipeList(data, lAr, runSelect, '맞춤');
-                    // 별점·즐겨찾기 버튼 주입 (렌더 완료 후 0.3초 대기)
                     setTimeout(() => { window.featuresScanCards && window.featuresScanCards(); }, 300);
                 } catch (e) {
                     console.error('[검색 오류]', e);
@@ -457,7 +451,6 @@
                 }
             }
 
-            // ── 최근 먹은 음식 (직접 입력) ───────────────────────────
             function _escapeHtml(s) {
                 return String(s).replace(/[&<>"']/g, c => ({
                     '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
@@ -583,7 +576,6 @@
             if (sBt) sBt.onclick = runSearch;
             if (sIn) sIn.onkeydown = (e) => { if (e.key === 'Enter') runSearch(); };
 
-            // ★ Bug Fix: 즐겨찾기 모달에서 레시피 클릭 시 상세 조회 가능하도록 전역 노출
             window.runSelectById = async (id, name) => {
                 await runSelect({ id, name, RCP_SEQ: id, RCP_NM: name });
             };
@@ -596,7 +588,6 @@
             });
             renderHistoryTags();
 
-            // 진입 분기: 저장된 프로필 있으면 메인, 없으면 온보딩
             if (userId) {
                 try {
                     const p = await getProfile(userId);

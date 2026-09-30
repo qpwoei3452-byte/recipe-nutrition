@@ -2,7 +2,7 @@ from typing import List, Dict, Optional
 
 # [FIX] 사용자 테스트 기간 동안 모든 부가 부스트를 일괄 무력화.
 # 종료 후 False로 되돌리면 원래 로직 복원됨.
-USER_TEST_MODE = True
+USER_TEST_MODE = False   # ← True에서 False로 변경 (냉장고 필터 활성화)
 
 PRESET_WEIGHTS = {
     "가성비":   {"price": 0.40, "protein": 0.18, "calorie": 0.10, "sodium": 0.07, "time": 0.25},
@@ -343,8 +343,6 @@ def _popularity_bonus(recipe_name: str) -> float:
     for keyword, weight in POPULAR_FOODS.items():
         kw_n = _normalize_name(keyword)
         if kw_n in name_n:
-            # 키워드가 레시피명의 35% 이상 차지해야 유효 매칭
-            # (예: "해장국"이 "저염탄장으로맛을낸황태해장국"에서 21% → 보너스 없음)
             ratio = len(kw_n) / max(len(name_n), 1)
             if ratio >= 0.35:
                 best = max(best, weight)

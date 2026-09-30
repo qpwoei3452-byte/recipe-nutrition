@@ -194,7 +194,7 @@ const Fridge = (() => {
         <strong style="color:#2c7be5">냉장고 재료 기반 추천</strong>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <input id="fridge-input" placeholder="재료명 입력 (예: 두부, 계란, 감자)"
+        <input id="fridge-input" placeholder="메인 재료명 입력 (예: 두부, 계란, 감자)"
           style="flex:1;padding:7px 12px;border:1px solid #cce0f5;border-radius:8px;font-size:14px"/>
         <button id="fridge-add-btn"
           style="padding:7px 14px;background:#2c7be5;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">추가</button>

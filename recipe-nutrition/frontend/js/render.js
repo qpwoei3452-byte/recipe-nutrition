@@ -140,7 +140,7 @@ export function renderDetail(detail, container) {
       <!-- ② 추천 분석 섹션 (score 있을 때만) -->
       ${scores ? _renderRecommendSection(detail, scores, score, reason, mode) : ''}
 
-      <!-- ③ 영양 요약 -->
+      <!-- ③ 영양 요약 (레시피 전체 합계) -->
       <div class="nutrition-summary">
         ${_nutriCard('열량',    Math.round(nt.energy_kcal ?? 0), 'kcal')}
         ${_nutriCard('단백질',  _f1(nt.protein_g), 'g')}
@@ -150,33 +150,48 @@ export function renderDetail(detail, container) {
         ${_priceCard(detail?.price_total_krw)}
       </div>
 
+      <!-- ③-b 별점 (상세 패널에서 직접 평가) -->
+      <div id="detail-rating-wrap" style="display:flex;align-items:center;gap:6px;margin:8px 0 4px;padding:8px 12px;background:#fffbf0;border-radius:10px;border:1px solid #fde68a">
+        <span style="font-size:13px;color:#92400e;font-weight:500">이 레시피 평가하기:</span>
+        <div id="detail-stars" style="display:flex;gap:3px"></div>
+        <span id="detail-rating-label" style="font-size:12px;color:#b45309;margin-left:4px"></span>
+      </div>
+
       <!-- ④ 재료 테이블 -->
       <div class="table-section">
-        <div class="section-label">재료 및 상세 영양 정보</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div class="section-label" style="margin:0">재료 목록</div>
+          <button id="ing-detail-toggle" onclick="(function(btn){
+            var cols=document.querySelectorAll('.ing-nut-col');
+            var show=cols[0]&&cols[0].style.display==='none';
+            cols.forEach(function(c){c.style.display=show?'':'none';});
+            btn.textContent=show?'영양 정보 숨기기':'재료별 영양 정보 보기';
+          })(this)" style="font-size:12px;padding:3px 10px;border:1px solid #ddd;border-radius:6px;background:#f9fafb;cursor:pointer;color:#555">재료별 영양 정보 보기</button>
+        </div>
         <div class="table-wrap">
           <table class="ing-table">
             <thead>
               <tr>
                 <th>재료명</th>
-                <th>사용량(g)</th>
-                <th>단백질(g)</th>
-                <th>지방(g)</th>
-                <th>탄수화물(g)</th>
+                <th>사용량</th>
+                <th class="ing-nut-col" style="display:none">단백질(g)</th>
+                <th class="ing-nut-col" style="display:none">지방(g)</th>
+                <th class="ing-nut-col" style="display:none">탄수화물(g)</th>
                 <th>가격(원)</th>
               </tr>
             </thead>
             <tbody>
               ${ingredients.map(ing => {
-                const nMatched = !!(ing.nutrition_matched_name);  // 영양 사전 매칭 성공 여부
-                const pMatched = !!(ing.price_matched_name);      // 가격 사전 매칭 성공 여부
+                const nMatched = !!(ing.nutrition_matched_name);
+                const pMatched = !!(ing.price_matched_name);
                 const hasData = nMatched || pMatched;
                 return `
                 <tr${hasData ? '' : ' class="ing-nodata"'}>
                   <td>${_ingName(ing.raw_name ?? ing.standard_nm)}</td>
                   <td>${_ingUnit(ing.raw_name, ing.amount_g)}</td>
-                  <td>${_cell(ing.protein_g, nMatched)}</td>
-                  <td>${_cell(ing.fat_g, nMatched)}</td>
-                  <td>${_cell(ing.carb_g, nMatched)}</td>
+                  <td class="ing-nut-col" style="display:none">${_cell(ing.protein_g, nMatched)}</td>
+                  <td class="ing-nut-col" style="display:none">${_cell(ing.fat_g, nMatched)}</td>
+                  <td class="ing-nut-col" style="display:none">${_cell(ing.carb_g, nMatched)}</td>
                   <td>${pMatched ? Math.round(ing.price_krw ?? 0).toLocaleString() : '0'}</td>
                 </tr>`;
               }).join('')}
@@ -210,12 +225,82 @@ export function renderDetail(detail, container) {
   });
 
   _wireStepsToggle(container, detail);
+  _wireDetailRating(container, detail);
+}
+
+/* ── 상세 패널 별점 UI 배선 ────────────────────────────────── */
+function _wireDetailRating(container, detail) {
+  const recipeId   = String(detail?.id ?? detail?.RCP_SEQ ?? '');
+  const recipeName = detail?.name ?? '';
+  const starsEl    = container.querySelector('#detail-stars');
+  const labelEl    = container.querySelector('#detail-rating-label');
+  if (!starsEl) return;
+
+  function ls(key, val) {
+    if (val === undefined) {
+      try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+    }
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+  }
+  function getRating(id) { return (ls('rec_ratings') || {})[id]?.score || 0; }
+  function saveRating(id, name, score) {
+    const all = ls('rec_ratings') || {};
+    if (score === 0) delete all[id];
+    else all[id] = { name, score, rated_at: new Date().toISOString() };
+    ls('rec_ratings', all);
+    fetch('/api/user/ratings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipe_id: id, recipe_name: name, score })
+    }).catch(() => {});
+  }
+
+  const STAR_LABELS = ['', '별로예요', '괜찮아요', '맛있어요', '훌륭해요', '최고예요!'];
+
+  function renderStars(current) {
+    starsEl.innerHTML = '';
+    for (let s = 1; s <= 5; s++) {
+      const star = document.createElement('span');
+      star.textContent = s <= current ? '★' : '☆';
+      star.style.cssText = `font-size:28px;cursor:pointer;color:${s <= current ? '#f59e0b' : '#ccc'};transition:color 0.1s;line-height:1`;
+      star.addEventListener('mouseenter', () => {
+        starsEl.querySelectorAll('span').forEach((st, i) => {
+          st.textContent = i < s ? '★' : '☆';
+          st.style.color = i < s ? '#f59e0b' : '#ccc';
+        });
+        if (labelEl) labelEl.textContent = STAR_LABELS[s];
+      });
+      star.addEventListener('mouseleave', () => {
+        const cur = getRating(recipeId);
+        starsEl.querySelectorAll('span').forEach((st, i) => {
+          st.textContent = i < cur ? '★' : '☆';
+          st.style.color = i < cur ? '#f59e0b' : '#ccc';
+        });
+        if (labelEl) labelEl.textContent = cur ? STAR_LABELS[cur] : '';
+      });
+      star.addEventListener('click', () => {
+        const prev = getRating(recipeId);
+        const newScore = prev === s ? 0 : s;
+        saveRating(recipeId, recipeName, newScore);
+        renderStars(newScore);
+        if (labelEl) labelEl.textContent = newScore ? `${STAR_LABELS[newScore]} (저장됨)` : '';
+        // 카드 목록의 별점도 동기화
+        document.querySelectorAll(`.recipe-card[data-recipe-id="${recipeId}"] .rf-star`)
+          .forEach((st, i) => {
+            st.textContent = i < newScore ? '★' : '☆';
+            st.style.color = i < newScore ? '#f59e0b' : '#ccc';
+          });
+      });
+      starsEl.appendChild(star);
+    }
+    if (labelEl) labelEl.textContent = current ? STAR_LABELS[current] : '';
+  }
+
+  renderStars(getRating(recipeId));
 }
 
 /* ── "쉽게 보기(AI)" 토글 배선 ─────────────────────
-   원본은 항상 그대로 유지, 버튼으로 원본↔AI 해설 전환.
-   AI 해설은 레시피당 한 번만 불러오고 클라이언트 메모리에도 캐시.
-   [FIX] AI 호출 실패 시: 원본 조리 순서로 자동 복귀 + 일시적 안내 배너 표시 */
+   원본은 항상 그대로 유지, 버튼으로 원본↔AI 해설 전환. */
 function _wireStepsToggle(container, detail) {
   const recipeId    = detail?.id ?? '';
   const recipeName  = detail?.name ?? '';
@@ -224,7 +309,6 @@ function _wireStepsToggle(container, detail) {
   const btns        = container.querySelectorAll('.steps-toggle-btn');
   if (!originalBox || !easyBox || btns.length === 0) return;
 
-  /* [FIX] 원본 보기로 되돌리는 헬퍼 — 원본 표시 + 버튼 상태 초기화 */
   function _revertToOriginal() {
     easyBox.style.display   = 'none';
     originalBox.style.display = '';
@@ -233,7 +317,6 @@ function _wireStepsToggle(container, detail) {
     if (originalBtn) originalBtn.classList.add('active');
   }
 
-  /* [FIX] 일시적 오류 안내 배너 — 노란색, 재시도 버튼, 8초 자동 사라짐 */
   function _showTransientNotice(recipeId, recipeName) {
     const existing = container.querySelector('#easy-steps-notice');
     if (existing) existing.remove();
@@ -260,20 +343,17 @@ function _wireStepsToggle(container, detail) {
         🔄 다시 시도
       </button>`;
 
-    /* 조리 순서 섹션 바로 위에 삽입 */
     const stepsSection = container.querySelector('.steps-section');
     if (stepsSection) {
       stepsSection.insertBefore(notice, stepsSection.firstChild);
     }
 
-    /* 재시도 버튼 — 클릭 시 배너 제거 후 쉽게 보기 버튼 다시 클릭 */
     notice.querySelector('#easy-steps-retry')?.addEventListener('click', () => {
       notice.remove();
       const easyBtn = container.querySelector('.steps-toggle-btn[data-mode="easy"]');
       if (easyBtn) easyBtn.click();
     });
 
-    /* 8초 후 자동 제거 */
     const autoRemove = setTimeout(() => notice.remove(), 8000);
     notice.addEventListener('click', () => clearTimeout(autoRemove), { once: true });
   }
@@ -289,7 +369,6 @@ function _wireStepsToggle(container, detail) {
         return;
       }
 
-      // "쉽게 보기" 선택
       originalBox.style.display = 'none';
       easyBox.style.display = '';
 
@@ -308,7 +387,6 @@ function _wireStepsToggle(container, detail) {
         const res = await getEasySteps(recipeId, recipeName);
         const easySteps = Array.isArray(res?.steps) ? res.steps : [];
         if (easySteps.length === 0) {
-          // [FIX] 빈 결과: 원본 복귀 + 안내 배너
           _revertToOriginal();
           _showTransientNotice(recipeId, recipeName);
           return;
@@ -317,7 +395,6 @@ function _wireStepsToggle(container, detail) {
         _renderEasySteps(easyBox, easySteps);
       } catch (e) {
         console.error('[쉽게 보기 로드 실패]', e);
-        // [FIX] 예외 발생: 원본 복귀 + 안내 배너
         _revertToOriginal();
         _showTransientNotice(recipeId, recipeName);
       }
@@ -401,7 +478,6 @@ function _renderEasySteps(container, steps) {
         }, 1000);
         _activeTimers.push(intervalId);
       } else {
-        // reset
         remaining = Math.round(minutes * 60);
         el.classList.remove('timer-done');
         render();
@@ -503,7 +579,6 @@ function _renderRecommendSection(detail, scores, score, reason, mode) {
             <div class="factor-top">
               <span class="factor-icon">${f.icon}</span>
               <span class="factor-label">${f.label}</span>
-
             </div>
             <div class="factor-bar-bg">
               <div class="factor-bar-fill"
@@ -519,8 +594,6 @@ function _renderRecommendSection(detail, scores, score, reason, mode) {
     </div>`;
 }
 
-/* AI 분석 부가 정보: 식단 유사도(설명용, MMR 다양성과 별개)
-   (조리시간 출처는 내부 정보라 화면에 표시하지 않음) */
 function _renderAiInfo(detail) {
   const dietSim = detail?.diet_similarity;
   const dietReason = detail?.diet_similarity_reason;
@@ -536,10 +609,8 @@ function _renderAiInfo(detail) {
 
 /* ── 공통 헬퍼 ───────────────────────────────── */
 
-/* 이미지가 없을 때 음식 종류에 맞는 이모지를 골라줌 */
 function _foodEmoji(r) {
   const name = (r.name || '') + ' ' + (r.category || '') + ' ' + (r.method || '');
-  // 음식명 키워드 우선 매칭
   const map = [
     [/밥|덮밥|볶음밥|비빔|죽|오므라이스/, '🍚'],
     [/찌개|국|탕/, '🍲'],
@@ -555,7 +626,6 @@ function _foodEmoji(r) {
   for (const [re, emoji] of map) {
     if (re.test(name)) return emoji;
   }
-  // 카테고리 기본값
   if (/국|탕|찌개/.test(r.category || '')) return '🍲';
   if (/밥/.test(r.category || '')) return '🍚';
   if (/반찬/.test(r.category || '')) return '🥘';
@@ -574,16 +644,9 @@ function _f1(v) {
   return v != null && v !== '' ? parseFloat(v).toFixed(1) : '0.0';
 }
 
-/* 매칭 성공 여부로 0과 '없음'을 구분.
-   - matched=true  → 값을 그대로 표시 (0이어도 "0.0". 예: 물의 단백질)
-   - matched=false → 사전에 없어 모르는 값이므로 대시(—) */
-
-/* 재료명에서 순수 이름만 추출 (g수·단위·섹션명 제거) */
 function _ingName(raw) {
   let s = (raw ?? '').trim();
   s = s.replace(/^[^:：\d]*[:：]\s*/, '');
-  // [FIX] "재료 굴"처럼 앞에 붙는 분류어(재료/부재료/주재료/양념/소스)가
-  // 안 지워지고 그대로 표시되던 문제 — 단위 제거 전에 먼저 제거.
   s = s.replace(/^(주재료|부재료|양념|소스|재료)\s*[:：]?\s*/, '');
   s = s.replace(/\s*\d+(?:\.\d+)?\s*(?:kg|g|mg|ml|l)\b/gi, '');
   s = s.replace(/\s*\(.*?\)/g, '');
@@ -592,7 +655,6 @@ function _ingName(raw) {
   return s.trim();
 }
 
-/* 사용량에 표시할 단위 힌트 추출 (괄호 안 내용: 1/2개, 2큰술 등) */
 function _ingUnit(raw, amount_g) {
   const hint = (raw ?? '').match(/\(([^)]+)\)/);
   const base = amount_g != null ? _f1(amount_g) : '';
@@ -608,10 +670,6 @@ function _cell(v, matched) {
   return parseFloat(v ?? 0).toFixed(1);
 }
 
-/* 재료비를 등급(낮음/보통/높음)으로 변환.
-   정확한 숫자는 "공격의 여지"가 있어(교수님 피드백), 등급을 메인으로 보여주고
-   숫자는 "약 ○○원" 형태로 참고용으로만 작게 표기한다.
-   기준: 1인분 재료비 절대값 (DB가 바뀌어도 일관) */
 function _priceLevel(krw) {
   const p = Math.round(krw || 0);
   if (p <= 0) return null;
@@ -623,7 +681,6 @@ function _priceLevel(krw) {
   return { label, cls, dots, approx: rounded.toLocaleString() };
 }
 
-/* 카드/요약용 짧은 가격 뱃지 HTML */
 function _priceBadge(krw) {
   const lv = _priceLevel(krw);
   if (!lv) return '';
@@ -638,7 +695,6 @@ function _priceBadge(krw) {
   >${lv.dots} ${lv.label}</span>`;
 }
 
-/* 상세 영양요약용 가격 카드 (등급 + 참고 숫자) */
 function _priceCard(krw) {
   const lv = _priceLevel(krw);
   if (!lv) {
