@@ -583,6 +583,11 @@
             if (sBt) sBt.onclick = runSearch;
             if (sIn) sIn.onkeydown = (e) => { if (e.key === 'Enter') runSearch(); };
 
+            // ★ Bug Fix: 즐겨찾기 모달에서 레시피 클릭 시 상세 조회 가능하도록 전역 노출
+            window.runSelectById = async (id, name) => {
+                await runSelect({ id, name, RCP_SEQ: id, RCP_NM: name });
+            };
+
             const histBtn = document.getElementById('historyAddBtn');
             const histInp = document.getElementById('historyInput');
             if (histBtn) histBtn.addEventListener('click', addHistory);

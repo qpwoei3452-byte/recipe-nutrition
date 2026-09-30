@@ -71,6 +71,10 @@ export function renderRecipeList(recipes, container, onSelect, mode = '기본') 
 
     const card = document.createElement('div');
     card.className = 'recipe-card';
+    // ★ Bug Fix: 즐겨찾기/별점 기능이 올바른 ID를 쓰도록 data 속성 설정
+    const _rid = r.id ?? r.RCP_SEQ ?? '';
+    if (_rid) card.dataset.recipeId = String(_rid);
+    card.dataset.recipeName = r.name ?? '';
 
     card.innerHTML = `
       <div class="card-rank-badge rank-${rank <= 3 ? rank : 'n'}">${rank}위</div>

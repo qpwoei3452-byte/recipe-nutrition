@@ -291,7 +291,8 @@ const RecipeActions = (() => {
     const img = card.querySelector('img');
     if (!img) return;
 
-    const recipeName = extractName(card);
+    // ★ Bug Fix: data-recipe-id 우선, 없으면 data-recipe-name, 최후엔 텍스트 추출
+    const recipeName = card.dataset.recipeName || extractName(card);
     const recipeId = (
       card.dataset.recipeId || card.dataset.id ||
       card.getAttribute('data-recipe-id') || card.getAttribute('data-id') ||
@@ -351,7 +352,8 @@ const RecipeActions = (() => {
     const faved = isFavorite(recipeId);
     favBtn.innerHTML = faved ? '❤️ 즐겨찾기됨' : '🤍 즐겨찾기';
     favBtn.style.cssText = `background:${faved?'#fee2e2':'none'};border:1px solid ${faved?'#fca5a5':'#ddd'};border-radius:8px;cursor:pointer;font-size:13px;padding:4px 10px;color:${faved?'#dc2626':'#555'};transition:all 0.2s`;
-    favBtn.addEventListener('click', () => {
+    favBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // ★ Bug Fix: 카드 클릭 이벤트 전파 차단
       const added = toggleFavorite(recipeId, recipeName, imageUrl);
       favBtn.innerHTML = added ? '❤️ 즐겨찾기됨' : '🤍 즐겨찾기';
       favBtn.style.background = added ? '#fee2e2' : 'none';
@@ -440,6 +442,29 @@ const Favorites = (() => {
     document.body.appendChild(modal);
     document.getElementById('fav-close').addEventListener('click', close);
     modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+    // ★ Bug Fix: 즐겨찾기 아이템 클릭 → 레시피 상세 이동
+    document.getElementById('fav-list').addEventListener('click', e => {
+      const row = e.target.closest('[data-fav-id]');
+      if (!row) return;
+      const id   = row.dataset.favId;
+      const name = row.dataset.favName;
+      close();
+      if (typeof window.runSelectById === 'function') {
+        window.runSelectById(id, name);
+      } else {
+        showToast('레시피를 불러오는 중...');
+        // 검색창에 이름 입력 후 검색 트리거 (fallback)
+        const searchInput = document.getElementById('searchInput') ||
+                            document.querySelector('input[type=text]');
+        if (searchInput) {
+          searchInput.value = name;
+          const searchBtn = document.getElementById('searchBtn') ||
+                            document.querySelector('button[type=submit]');
+          searchBtn?.click();
+        }
+      }
+    });
   }
 
   function refresh() {
@@ -448,13 +473,18 @@ const Favorites = (() => {
     const favs = RecipeActions.getAllFavorites();
     list.innerHTML = favs.length
       ? favs.map(f => `
-          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0">
+          <div data-fav-id="${(f.id||'').replace(/"/g,'&quot;')}" data-fav-name="${(f.name||'').replace(/"/g,'&quot;')}"
+            style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0;cursor:pointer"
+            onmouseenter="this.style.background='#fef2f2'" onmouseleave="this.style.background=''">
             ${f.image_url
               ? `<img src="${f.image_url}" style="width:56px;height:56px;object-fit:cover;border-radius:8px" onerror="this.style.display='none'">`
               : '<div style="width:56px;height:56px;background:#f5f5f5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px">🍽️</div>'}
-            <span style="flex:1;font-size:15px;font-weight:500">${f.name || f.id}</span>
-            <button onclick="window._favRemove('${(f.id||f.name).replace(/'/g,"\\'")}','${(f.name||'').replace(/'/g,"\\'")}')"
-              style="background:none;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:13px">삭제</button>
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:500">${f.name || f.id}</div>
+              <div style="font-size:12px;color:#aaa;margin-top:2px">클릭하면 레시피를 볼 수 있어요 →</div>
+            </div>
+            <button onclick="event.stopPropagation();window._favRemove('${(f.id||f.name).replace(/'/g,"\\'")}','${(f.name||'').replace(/'/g,"\\'")}')"
+              style="background:none;border:1px solid #fca5a5;color:#dc2626;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:13px;flex-shrink:0">삭제</button>
           </div>`).join('')
       : `<div style="text-align:center;padding:40px 0;color:#aaa">
           <div style="font-size:40px;margin-bottom:10px">🤍</div>
