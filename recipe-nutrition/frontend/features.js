@@ -147,7 +147,7 @@ const TimeSlot = (() => {
 
   function init() {
     const saved = ls(LS_KEY);
-    enabled = (saved === null) ? false : !!saved;  // [FIX] 기본 OFF
+    enabled = (saved === null) ? false : !!saved;
     currentSlot = detectSlot();
     renderUI();
   }
@@ -254,9 +254,7 @@ const RecipeActions = (() => {
   function isFavorite(id) { return !!(ls('rec_favorites') || {})[id]; }
   function getAllFavorites() { return Object.values(ls('rec_favorites') || {}); }
 
-  // ── 레시피 이름 추출 (여러 방법 순차 시도) ──
   function extractName(card) {
-    // 1) heading, strong, 클래스명에 name/title 포함
     const selectors = ['h2','h3','h4','h5','strong',
       '.recipe-name','.title',
       '[class*="name"]','[class*="title"]','[class*="recipe"]'];
@@ -267,17 +265,14 @@ const RecipeActions = (() => {
         if (txt.length >= 2 && txt.length <= 40) return txt;
       }
     }
-    // 2) 자식 없는 요소 중 2~30자짜리 텍스트
     const leaves = card.querySelectorAll('p,div,span,a,li');
     for (const el of leaves) {
       if (el.children.length > 0) continue;
       const txt = el.textContent.trim();
       if (txt.length >= 2 && txt.length <= 30) return txt;
     }
-    // 3) img alt
     const img = card.querySelector('img');
     if (img?.alt && img.alt.length >= 2) return img.alt;
-    // 4) 카드 전체 텍스트 첫 줄
     const firstLine = card.textContent.trim().split('\n')
       .map(s => s.trim()).find(s => s.length >= 2 && s.length <= 40);
     return firstLine || '레시피';
@@ -291,7 +286,6 @@ const RecipeActions = (() => {
     const img = card.querySelector('img');
     if (!img) return;
 
-    // ★ Bug Fix: data-recipe-id 우선, 없으면 data-recipe-name, 최후엔 텍스트 추출
     const recipeName = card.dataset.recipeName || extractName(card);
     const recipeId = (
       card.dataset.recipeId || card.dataset.id ||
@@ -353,7 +347,7 @@ const RecipeActions = (() => {
     favBtn.innerHTML = faved ? '❤️ 즐겨찾기됨' : '🤍 즐겨찾기';
     favBtn.style.cssText = `background:${faved?'#fee2e2':'none'};border:1px solid ${faved?'#fca5a5':'#ddd'};border-radius:8px;cursor:pointer;font-size:13px;padding:4px 10px;color:${faved?'#dc2626':'#555'};transition:all 0.2s`;
     favBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // ★ Bug Fix: 카드 클릭 이벤트 전파 차단
+      e.stopPropagation();
       const added = toggleFavorite(recipeId, recipeName, imageUrl);
       favBtn.innerHTML = added ? '❤️ 즐겨찾기됨' : '🤍 즐겨찾기';
       favBtn.style.background = added ? '#fee2e2' : 'none';
@@ -368,37 +362,11 @@ const RecipeActions = (() => {
     card.appendChild(wrapper);
   }
 
-  // ── 핵심: img → area 직계자식까지 올라가기 (DOM 구조 무관) ──
+  // ★★★ 핵심 버그 수정: .recipe-card를 직접 찾아서 각각에 injectActions ★★★
   function scanCards() {
     const area = document.getElementById('recipeListArea');
     if (!area) return;
-
-    const seen = new WeakSet();
-
-    area.querySelectorAll('img').forEach(img => {
-      // img 부모를 따라 올라가며 area의 직계 자식 찾기
-      let el = img;
-      while (el && el.parentElement && el.parentElement !== area) {
-        el = el.parentElement;
-      }
-
-      // el이 area의 직계 자식인 경우
-      if (el && el !== area && el.parentElement === area) {
-        if (!seen.has(el)) {
-          seen.add(el);
-          injectActions(el);
-        }
-        return;
-      }
-
-      // area가 img를 직접 포함하는 경우 (부모가 area 자체)
-      if (img.parentElement === area) {
-        if (!seen.has(img.parentElement)) {
-          seen.add(img.parentElement);
-          injectActions(img.parentElement);
-        }
-      }
-    });
+    area.querySelectorAll('.recipe-card').forEach(card => injectActions(card));
   }
 
   window.featuresScanCards = scanCards;
@@ -443,7 +411,6 @@ const Favorites = (() => {
     document.getElementById('fav-close').addEventListener('click', close);
     modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
-    // ★ Bug Fix: 즐겨찾기 아이템 클릭 → 레시피 상세 이동
     document.getElementById('fav-list').addEventListener('click', e => {
       const row = e.target.closest('[data-fav-id]');
       if (!row) return;
@@ -454,7 +421,6 @@ const Favorites = (() => {
         window.runSelectById(id, name);
       } else {
         showToast('레시피를 불러오는 중...');
-        // 검색창에 이름 입력 후 검색 트리거 (fallback)
         const searchInput = document.getElementById('searchInput') ||
                             document.querySelector('input[type=text]');
         if (searchInput) {
