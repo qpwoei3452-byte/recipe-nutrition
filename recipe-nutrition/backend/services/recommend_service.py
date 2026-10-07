@@ -34,7 +34,24 @@ POPULAR_FOODS: Dict[str, float] = {
     "계란말이": 0.60, "떡국":      0.60, "순대국":   0.60,
     "해장국":   0.60,
 }
-POPULARITY_BONUS = 0.28
+# [FIX] 0.28 → 0.06
+# 사용자 가중치로 계산한 기본 점수는 0~1(실제로는 0.2~0.8) 범위인데,
+# 인기 메뉴면 +0.28, 아니면 ×0.78 감점이 붙어 두 집단 사이에 0.3~0.4점
+# 차이가 벌어졌다. 사용자가 슬라이더를 어떻게 움직여도 이 차이를 뒤집기
+# 어려워, "개인 맞춤형"이라는 기능이 사실상 무력화돼 있었다.
+#
+# 실제 로그 예시:
+#   부대된장찌개      기본=1.000 인기=0.28 → 1.000
+#   사과 새우 북엇국   기본=0.784 인기=0.00 → 0.612   ← 기본 점수가 높은데 밀림
+#
+# 50건 실데이터로 측정한 변화 (가성비·단백질·저염·빠른조리·저칼로리 5개 프로필):
+#   프로필 간 Top10 중복도 0.485 → 0.263   (낮을수록 개인화가 작동)
+#   Top10 내 인기메뉴 비중   60% → 18%
+#   점수 1.000 포화 레시피   6개 → 0개      (순위 구분이 가능해짐)
+#
+# 인기도를 버린 것은 아니다. POPULAR_FOODS 목록과 _popularity_bonus()는
+# 그대로 두고, 영향력만 "비슷한 점수끼리 순서를 가르는" 수준으로 낮췄다.
+POPULARITY_BONUS = 0.06
 
 WEIGHTS     = PRESET_WEIGHTS
 WEIGHT_KEYS = ("price", "protein", "calorie", "sodium", "time")
@@ -111,29 +128,86 @@ def blend_with_log(
 def normalize_scores(recipes: List[Dict]) -> List[Dict]:
     if not recipes:
         return recipes
-    max_cost    = max(r.get("price_total_krw", 0) or 0 for r in recipes) or 1
-    max_protein = max(r.get("nutrition_total", {}).get("protein_g", 0) or 0 for r in recipes) or 1
-    max_cal     = max(r.get("nutrition_total", {}).get("energy_kcal", 0) or 0 for r in recipes) or 1
-    max_sodium  = max(r.get("nutrition_total", {}).get("sodium_mg", 0) or 0 for r in recipes) or 1
-    max_time    = max(r.get("cook_time_min", 30) or 30 for r in recipes) or 1
+
+    # [FIX] 가격을 못 구해 0원인 레시피가 1 - 0/max = 1.0 으로 '가장 저렴함'
+    # 만점을 받아 가성비 모드 1위로 올라가던 버그.
+    # 가격 미상은 "싸다"가 아니라 "모른다"이므로, 값이 있는 레시피들의
+    # 중앙값으로 대체해 중립적으로 취급한다.
+    known_costs = sorted(c for c in
+                         (r.get("price_total_krw", 0) or 0 for r in recipes) if c > 0)
+    if known_costs:
+        mid = len(known_costs) // 2
+        unknown_cost = (known_costs[mid] if len(known_costs) % 2
+                        else (known_costs[mid - 1] + known_costs[mid]) / 2)
+    else:
+        unknown_cost = 0.0
     for r in recipes:
-        nt     = r.get("nutrition_total", {})
-        cost   = r.get("price_total_krw", 0) or 0
-        prot   = nt.get("protein_g", 0) or 0
-        cal    = nt.get("energy_kcal", 0) or 0
-        sodium = nt.get("sodium_mg", 0) or 0
-        time   = r.get("cook_time_min", 30) or 30
+        if not (r.get("price_total_krw", 0) or 0) > 0:
+            r["price_estimated"] = True      # 프론트에서 '가격 정보 없음' 표시용
+
+    # [FIX] 기존에는 max만 써서 `1 - x/max` 로 계산했다. 두 가지 문제가 있었다.
+    #   (1) 후보가 1개면 자기 자신이 최댓값이라 모든 점수가 0이 된다
+    #   (2) 후보들의 값이 비슷하면 점수가 전부 1 근처에 몰려 변별력이 사라진다
+    # 표준적인 min-max 정규화로 바꿔, 후보 집합 안에서의 상대 위치를 반영한다.
+    # 값이 모두 같거나 후보가 1개면 0.5(중립)를 준다.
+    def _collect(getter):
+        return [getter(r) for r in recipes]
+
+    def _winsorize(values, p=0.05):
+        """[FIX] 이상값 1건이 정규화 전체를 왜곡하는 문제를 막는다.
+
+        식약처 데이터에 `표고버섯 청경채국` 나트륨 2,441mg 같은 입력 오류가
+        있다(재료는 국간장 5g뿐이라 실제로는 300mg 수준). 이 값이 min-max의
+        최댓값이 되면 나머지 레시피의 나트륨 점수가 모두 1 근처로 몰려
+        저염 가중치가 사실상 작동하지 않는다.
+
+          이상값 포함: 50건 중 40건이 0.8 이상 (1사분위 0.846)
+          이상값 제외: 49건 중 28건이 0.8 이상 (1사분위 0.637)
+
+        원본 데이터를 고치는 대신, 상·하위 5%를 해당 분위값으로 자르는
+        윈저화(winsorizing)를 적용한다. 통계에서 쓰는 표준 기법이고
+        값을 임의로 바꾸지 않으므로 근거가 분명하다.
+        """
+        if len(values) < 10:          # 후보가 적으면 분위수가 의미 없다
+            return values
+        ordered = sorted(values)
+        lo = ordered[int(len(ordered) * p)]
+        hi = ordered[min(len(ordered) - 1, int(len(ordered) * (1 - p)))]
+        return [min(max(v, lo), hi) for v in values]
+
+    def _mk(values, higher_is_better: bool):
+        values = _winsorize(values)
+        lo, hi = min(values), max(values)
+        span = hi - lo
+        if span <= 0:                 # 전부 같은 값 / 후보 1개 → 중립
+            return [0.5] * len(values)
+        if higher_is_better:
+            return [round((v - lo) / span, 4) for v in values]
+        return [round((hi - v) / span, 4) for v in values]
+
+    costs   = [(r.get("price_total_krw", 0) or 0) or unknown_cost for r in recipes]
+    prots   = [r.get("nutrition_total", {}).get("protein_g", 0) or 0 for r in recipes]
+    cals    = [r.get("nutrition_total", {}).get("energy_kcal", 0) or 0 for r in recipes]
+    sodiums = [r.get("nutrition_total", {}).get("sodium_mg", 0) or 0 for r in recipes]
+    times   = [r.get("cook_time_min", 30) or 30 for r in recipes]
+
+    s_price   = _mk(costs,   higher_is_better=False)   # 쌀수록 좋음
+    s_protein = _mk(prots,   higher_is_better=True)    # 많을수록 좋음
+    s_calorie = _mk(cals,    higher_is_better=False)   # 낮을수록 좋음
+    s_sodium  = _mk(sodiums, higher_is_better=False)   # 낮을수록 좋음
+    s_time    = _mk(times,   higher_is_better=False)   # 짧을수록 좋음
+
+    for i, r in enumerate(recipes):
         r["_scores"] = {
-            "price":   round(1 - cost   / max_cost,   4),
-            "protein": round(prot       / max_protein, 4),
-            "calorie": round(1 - cal    / max_cal,     4),
-            "sodium":  round(1 - sodium / max_sodium,  4),
-            "time":    round(1 - time   / max_time,    4),
+            "price":   s_price[i],
+            "protein": s_protein[i],
+            "calorie": s_calorie[i],
+            "sodium":  s_sodium[i],
+            "time":    s_time[i],
         }
         print(f"[normalize_scores] {r.get('name','?')}: "
-              f"가격={cost}/{max_cost} 칼로리={cal}/{max_cal} "
-              f"단백질={prot}/{max_protein} 나트륨={sodium}/{max_sodium} "
-              f"→ _scores={r['_scores']}")
+              f"가격={costs[i]} 칼로리={cals[i]} 단백질={prots[i]} "
+              f"나트륨={sodiums[i]} 시간={times[i]}분 → _scores={r['_scores']}")
     return recipes
 
 
@@ -349,17 +423,51 @@ def _popularity_bonus(recipe_name: str) -> float:
     return round(best * POPULARITY_BONUS, 4)
 
 
+# [FIX] 양념·기본 재료는 "집에 당연히 있다"고 보고 냉장고 매칭에서 제외한다.
+PANTRY_STAPLES = {
+    "소금", "설탕", "간장", "식초", "고추장", "된장", "쌈장", "참기름", "들기름",
+    "식용유", "올리브유", "후추", "후춧가루", "고춧가루", "물", "맛술", "청주",
+    "마늘", "대파", "생강", "깨", "참깨", "물엿", "올리고당", "전분", "녹말가루",
+}
+
+
+def _ingredient_matches(ing_norm: str, fridge_norm: str) -> bool:
+    """[FIX] 기존에는 양방향 부분 문자열(a in b or b in a)이라
+    '파'를 입력하면 대파·쪽파·파프리카·파슬리가 전부 걸려 필터가
+    사실상 무력화됐다. 1~2글자 입력은 완전일치만 인정한다."""
+    if not ing_norm or not fridge_norm:
+        return False
+    if len(fridge_norm) <= 2:
+        return ing_norm == fridge_norm
+    return fridge_norm in ing_norm or ing_norm in fridge_norm
+
+
+def _main_ingredients(recipe: Dict) -> set:
+    """양념류를 뺀 '주재료' 집합."""
+    return {n for n in (_normalize_name(i) for i in _ingredient_set(recipe))
+            if n and n not in PANTRY_STAPLES}
+
+
+def _fridge_coverage(recipe: Dict, fridge_ingredients: List[str]) -> float:
+    """레시피 주재료 중 내 냉장고로 커버되는 비율 (0.0 ~ 1.0)."""
+    mains = _main_ingredients(recipe)
+    if not mains:
+        return 0.0
+    fridge_norm = [_normalize_name(f.strip()) for f in fridge_ingredients]
+    fridge_norm = [f for f in fridge_norm if f]
+    if not fridge_norm:
+        return 0.0
+    covered = sum(1 for m in mains if any(_ingredient_matches(m, f) for f in fridge_norm))
+    return round(covered / len(mains), 4)
+
+
 def _fridge_match_score(recipe: Dict, fridge_ingredients: List[str]) -> float:
+    """점수 가산용: 내 재료가 몇 개나 쓰이는지 (최대 +0.20)."""
     if not fridge_ingredients:
         return 0.0
-    ing_set_norm = {_normalize_name(i) for i in _ingredient_set(recipe)}
-    matches = 0
-    for fi in fridge_ingredients:
-        fi_n = _normalize_name(fi.strip())
-        if not fi_n:
-            continue
-        if any(fi_n in ing or ing in fi_n for ing in ing_set_norm if ing):
-            matches += 1
+    mains = _main_ingredients(recipe)
+    fridge_norm = [_normalize_name(f.strip()) for f in fridge_ingredients]
+    matches = sum(1 for f in fridge_norm if f and any(_ingredient_matches(m, f) for m in mains))
     return round(min(matches * 0.05, 0.20), 4)
 
 
@@ -400,12 +508,22 @@ def recommend(
     liked_recipe_names:    List[str]                  = [],
     disliked_recipe_names: List[str]                  = [],
     fridge_only:           bool                       = False,
+    fridge_mode:           str                        = "boost",
 ) -> List[Dict]:
     if not recipes:
         return []
 
-    if fridge_ingredients and fridge_only and not USER_TEST_MODE:
-        recipes = [r for r in recipes if _fridge_match_score(r, fridge_ingredients) > 0]
+    # fridge_mode: boost | any | mostly
+    if fridge_only and fridge_mode == "boost":
+        fridge_mode = "any"          # 구버전 프론트 호환
+
+    if fridge_ingredients and fridge_mode != "boost" and not USER_TEST_MODE:
+        threshold = 0.7 if fridge_mode == "mostly" else 0.0
+        filtered = [r for r in recipes
+                    if _fridge_coverage(r, fridge_ingredients) > threshold]
+        print(f"[recommend] 냉장고 필터({fridge_mode}, 기준 {threshold}): "
+              f"{len(recipes)}개 → {len(filtered)}개")
+        recipes = filtered
         if not recipes:
             return []
 
@@ -439,8 +557,6 @@ def recommend(
             pop_bonus    = _popularity_bonus(name)
             fridge_bonus = _fridge_match_score(r, fridge_ingredients)
             rating_adj   = _rating_adjustment(name, liked_recipe_names, disliked_recipe_names)
-            if pop_bonus == 0.0:
-                penalized = round(penalized * 0.78, 4)
             final_score  = round(min(1.0, max(0.0, penalized + pop_bonus + fridge_bonus + rating_adj)), 4)
 
         r["base_score"]          = final_score

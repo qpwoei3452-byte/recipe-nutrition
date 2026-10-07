@@ -20,6 +20,7 @@ import json
 import os
 import re
 import time
+from datetime import date, timedelta
 from difflib import get_close_matches
 from pathlib import Path
 from statistics import median
@@ -71,23 +72,23 @@ _CACHE_DIR.mkdir(exist_ok=True)
 # ─────────────────────────────────────────────────────────────
 STANDARD_AVERAGE_DB: Dict[str, float] = {
     # 채소 (원/100g)
-    "배추": 150,    "양배추": 200,  "양파": 300,    "대파": 350,
+    "양배추": 200,  "양파": 300,    "대파": 350,
     "파": 350,      "마늘": 700,    "생강": 800,    "시금치": 600,
     "부추": 600,    "상추": 500,    "깻잎": 1200,   "쑥갓": 800,
     "숙주": 300,    "콩나물": 250,  "당근": 400,    "감자": 300,
-    "고구마": 300,  "애호박": 500,  "오이": 450,    "가지": 600,
+    "고구마": 300,  "애호박": 500,  "오이": 450,    
     "무": 150,      "토마토": 700,  "방울토마토": 1000, "브로콜리": 900,
-    "컬리플라워": 1200, "미나리": 700, "도라지": 1500, "연근": 1200,
+    "컬리플라워": 1200, "미나리": 700, "도라지": 1500, 
     "버섯": 700,    "표고버섯": 1500, "팽이버섯": 400, "새송이버섯": 800,
     "느타리버섯": 600, "고추": 800, "청양고추": 1000, "쑥": 800,
     "냉이": 2000,   "봄동": 400,    "치커리": 600,  "양상추": 500,
-    "로메인": 500,  "깻잎순": 1200, "쪽파": 600,    "대추": 2000,
-    "비트": 800,    "연근": 1200,   "우엉": 800,    "피망": 600,
+    "로메인": 500,  "깻잎순": 1200, "쪽파": 600,    
+    "비트": 800,    "피망": 600,
     "파프리카": 800, "홍파프리카": 800, "황파프리카": 800, "청파프리카": 600,
     # 과일
     "사과": 700,    "배": 800,      "딸기": 2000,   "귤": 600,
     "오렌지": 1000, "포도": 1500,   "복숭아": 1500, "수박": 300,
-    "블루베리": 3000, "자두": 1500, "멜론": 800,    "석류": 1000,
+    "자두": 1500, "멜론": 800,    "석류": 1000,
     "자몽": 1500,   "레몬": 2000,   "크랜베리": 1500,
     # 두부·가공식품
     "두부": 500,    "순두부": 450,  "곤약": 600,    "실곤약": 400,
@@ -96,10 +97,10 @@ STANDARD_AVERAGE_DB: Dict[str, float] = {
     # 액체 조미료
     "간장": 350,    "액젓": 500,    "멸치액젓": 500, "새우젓": 800,
     "참기름": 1200, "들기름": 1800, "식용유": 200,  "올리브유": 1500,
-    "올리브오일": 1500, "식초": 250, "청주": 400,   "맛술": 500,
+    "식초": 250, "청주": 400,   "맛술": 500,
     "요리당": 600,  "발사믹식초": 1500, "발사믹소스": 1500,
     "발사믹크레마": 3000, "매실액": 800, "유자청": 1500,
-    "화이트와인": 2000, "레몬즙": 2000, "오렌지즙": 1500,
+    "레몬즙": 2000, "오렌지즙": 1500,
     "석류즙": 2000, "꿀": 1200,
     # 분말·고체 조미료
     "고춧가루": 1800, "된장": 500,  "고추장": 600,  "쌈장": 700,
@@ -110,14 +111,14 @@ STANDARD_AVERAGE_DB: Dict[str, float] = {
     "요거트": 800,  "슬라이스치즈": 1500,
     # 육류
     "돼지고기": 2000, "소고기": 4000, "닭고기": 1000, "닭가슴살": 1200,
-    "삼겹살": 2500,  "베이컨": 2500, "소시지": 800,  "스팸": 1800,
+    "베이컨": 2500, "소시지": 800,  "스팸": 1800,
     "통조림 햄": 2000, "햄": 1500,
     # 해산물
-    "새우": 2500,   "오징어": 1800, "꼬막": 2500,   "바지락": 1800,
+    "새우": 2500,   "오징어": 1800, 
     "조개": 1800,   "멸치": 1500,   "황태": 3000,   "대구": 2000,
     "굴": 3000,     "꽁치": 1500,   "삼치": 2000,   "도미": 3000,
-    "황태채": 3000, "북어채": 3000, "메추리알": 1500, "낙지": 3000,
-    "주꾸미": 3000, "문어": 4000,
+    "황태채": 3000, "북어채": 3000, "메추리알": 1500, 
+    
     # 곡류·면
     "쌀": 250,      "현미": 300,    "찹쌀": 400,    "밀가루": 150,
     "소면": 300,    "당면": 400,    "메밀면": 700,  "떡": 600,
@@ -125,14 +126,14 @@ STANDARD_AVERAGE_DB: Dict[str, float] = {
     # 견과·씨앗
     "잣": 5000,     "호두": 4000,   "아몬드": 3000, "땅콩": 1000,
     "참깨": 1500,   "깨": 1500,     "해바라기씨": 800, "호박씨": 1000,
-    "검은콩": 900,  "강낭콩": 900,
+    "강낭콩": 900,
     # 기타 자주 쓰이는 재료
-    "설탕": 100,    "물엿": 300,    "산마": 5000,   "부침가루": 200,
+    "설탕": 100,    "산마": 5000,   "부침가루": 200,
     "날콩가루": 1500, "콩가루": 1000, "가시오가피": 3000,
-    "다시마": 2000, "함초": 3000,   "미역": 1500,   "건미역": 3000,
+    "다시마": 2000, "함초": 3000,   "건미역": 3000,
     "가지": 600,    "돌나물": 500,  "녹말": 500,    "식용꽃": 3000,
     "들깨가루": 1500, "들깻가루": 1500, "참나물": 1500,
-    "모시조개": 2000, "바지락": 1800, "국간장": 400,
+    "바지락": 1800, "국간장": 400,
     "드레싱 올리브오일": 2000, "올리브오일": 1500,
     # 해산물 추가
     "꼬막": 1800,   "달래": 1500,   "골뱅이": 2000, "전복": 6000,
@@ -162,7 +163,7 @@ STANDARD_AVERAGE_DB: Dict[str, float] = {
     # 소스류
     "칠리소스": 800,  "토마토소스": 600, "크림소스": 1200,
     # 기타
-    "망고": 3000,    "견과류": 3000,   "빵가루": 400,
+    "견과류": 3000,   "빵가루": 400,
     "뽕잎가루": 2500, "모차렐라치즈": 2500,
     "슈레드 모차렐라치즈": 2500, "배추": 150,
     "블랙올리브": 800,  "그린올리브": 800,  "해조국수": 2500,
@@ -224,7 +225,7 @@ PRICE_CAP: Dict[str, float] = {
     "깻잎": 3000,
     # 과일
     "사과": 2000,   "배": 2500,     "딸기": 5000,   "귤": 1500,
-    "오렌지": 2500, "블루베리": 8000, "석류": 5000, "레몬": 5000,
+    "오렌지": 2500, "석류": 5000, "레몬": 5000,
     "크랜베리": 5000,
     # 두부·가공식품
     "두부": 1500,   "순두부": 1200, "곤약": 1500,   "실곤약": 1000,
@@ -239,7 +240,7 @@ PRICE_CAP: Dict[str, float] = {
     "드레싱 올리브오일": 5000,
     # 달걀·유제품
     "달걀": 1000,   "계란": 1000,   "우유": 500,    "생크림": 2500,
-    "치즈": 5000,   "버터": 5000,   "플레인요거트": 2000,
+    "버터": 5000,   "플레인요거트": 2000,
     # 육류
     "돼지고기": 4000, "소고기": 7000, "닭고기": 2500, "닭가슴살": 2500,
     "베이컨": 5000, "소시지": 2000, "스팸": 4000,   "햄": 3000,
@@ -290,14 +291,14 @@ PRICE_CAP: Dict[str, float] = {
     # 돼지고기 부위
     "족발": 3000,    "보쌈": 2500,   "수육": 2500,
     # 과일 상한 조정
-    "블루베리": 5000, "아보카도": 4000, "바나나": 1000,
+    "블루베리": 5000, "바나나": 1000,
     # 조미료
     "올리고당": 500,  "아가베시럽": 1000, "메이플시럽": 2000,
     # 허브류
     "애플민트": 2000, "바질": 2000,   "로즈메리": 2000, "타임": 2000,
     "파슬리": 1500,  "딜": 2000,     "처빌": 2000,
     # 기타
-    "쌀": 500,       "즉석밥": 2000, "박력분": 400,   "강력분": 400,
+    "즉석밥": 2000, "박력분": 400,   "강력분": 400,
     "중력분": 400,
     # 해산물 추가
     "대하": 3000,    "아보카도": 3000,
@@ -310,12 +311,25 @@ PRICE_CAP: Dict[str, float] = {
     "떡": 1500,
     # 견과
     "잣": 10000,    "호두": 8000,   "아몬드": 6000, "땅콩": 2500,
-    "참깨": 3000,   "깨": 3000,
+    # [FIX] KAMIS 공식가(국산 백색 참깨 500g 17,350원 = 100g당 3,470원)가
+    # 상한 3,000원에 걸려 거부됐다. 국산 참깨 소매가는 100g당 2,500~4,000원
+    # 수준이므로 상한이 너무 낮았다.
+    "참깨": 6000,   "깨": 6000,
 }
 
 # 개 단위 → g 환산
-# [FIX] 기존 18개 → 확장. 목록에 없는 재료는 "개당 몇 g인지" 알 수 없어
-# 개수 표기 상품(예: "감자 3개")의 단가를 잘못 계산하는 원인이 됐었음.
+KAMIS_UNIT_GRAMS: Dict[str, Dict[str, float]] = {
+    "포기": {"배추": 2000.0, "양배추": 900.0, "default": 1500.0},
+    "단":   {"대파": 800.0,  "시금치": 200.0, "부추": 150.0, "쪽파": 300.0, "default": 400.0},
+    "손":   {"고등어": 400.0, "갈치": 400.0,  "default": 400.0},
+    "마리": {"고등어": 400.0, "갈치": 350.0,  "오징어": 250.0, "닭": 1000.0, "default": 400.0},
+    "쪽":   {"마늘": 5.0,    "default": 10.0},
+    "톨":   {"마늘": 60.0,   "default": 60.0},
+    "줄":   {"default": 100.0},
+    "속":   {"default": 100.0},
+    "장":   {"김": 2.0,      "default": 10.0},
+}
+
 PIECE_GRAMS: Dict[str, float] = {
     "오렌지": 200, "당근": 200, "양파": 180, "감자": 180,
     "사과": 250,   "토마토": 150, "방울토마토": 12,
@@ -460,9 +474,14 @@ def _is_realistic(keyword: str, price_per_100g: float) -> bool:
         return False
 
     # PRICE_CAP 딕셔너리에서 상한선 확인
-    for key, cap in PRICE_CAP.items():
-        if key in keyword or keyword in key:
-            return price_per_100g <= cap
+    cap = PRICE_CAP.get(keyword)
+    if cap is None:
+        for key in sorted(PRICE_CAP, key=len, reverse=True):
+            if key in keyword:
+                cap = PRICE_CAP[key]
+                break
+    if cap is not None:
+        return price_per_100g <= cap
 
     # 기본 상한: 15,000원/100g
     return price_per_100g <= 15000
@@ -478,14 +497,6 @@ def _to_float(v) -> float:
         return 0.0
 
 def _extract_weight_g(title: str, kw: str = "") -> float:
-    """
-    상품명에서 실제 중량(g)을 추출.
-    [FIX] 기존에는 kg/L/ml/g 표기만 인식했고, "감자 3개", "계란 30구" 같은
-    개수 표기 상품은 중량을 못 찾아 0을 반환 → 호출부의 위험한 폴백
-    (아래 elif lp <= 5000: per100g = lp) 때문에 "개당 가격 전체를
-    100g당 가격"으로 오인해서 단가가 실제보다 훨씬 높게/낮게 잘못
-    계산되는 버그가 있었음. PIECE_GRAMS 테이블로 개수 → g 환산을 추가함.
-    """
     t = re.sub(r"<[^>]+>", " ", title.lower())
     t = re.sub(r"\s+", " ", t)
     for pat, mul in [
@@ -524,6 +535,13 @@ def _unit_to_g(unit: str, kw: str) -> float:
     m = re.search(r"(\d+(?:\.\d+)?)\s*개", u)
     if m:
         return float(m.group(1)) * PIECE_GRAMS.get(kw, 0)
+
+    for unit_kw, grams in KAMIS_UNIT_GRAMS.items():
+        m = re.search(r"(\d+(?:\.\d+)?)\s*" + unit_kw, u)
+        if m:
+            g = grams.get(kw) or grams.get("default", 0)
+            if g:
+                return float(m.group(1)) * g
     return 0.0
 
 def _find_rows(obj) -> List[Dict]:
@@ -553,25 +571,61 @@ async def _load_kamis() -> List[Dict]:
             _KAMIS_ROWS.update({"ts": time.time(), "rows": [], "loaded": True})
             return []
 
-        async def _fetch(client, cat):
+        fail_reasons = []
+
+        # [FIX] p_regday(조회 날짜)를 보내지 않으면 KAMIS가 빈 응답을 돌려준다.
+        async def _fetch(client, cat, regday):
             try:
                 res = await client.get(KAMIS_URL, params={
                     "action": "dailyPriceByCategoryList",
                     "p_cert_key": KAMIS_KEY, "p_cert_id": KAMIS_ID,
                     "p_returntype": "json", "p_product_cls_code": "01",
                     "p_item_category_code": cat, "p_country_code": "1101",
-                    "p_convert_kg_yn": "N",
+                    "p_convert_kg_yn": "N", "p_regday": regday,
                 })
-                return _find_rows(res.json() if res.status_code == 200 else {})
-            except Exception:
+                if res.status_code != 200:
+                    fail_reasons.append(f"cat={cat} HTTP {res.status_code}")
+                    return []
+                try:
+                    body = res.json()
+                except Exception:
+                    fail_reasons.append(f"cat={cat} JSON 아님: {res.text[:120]}")
+                    return []
+
+                found = _find_rows(body)
+                if not found:
+                    code = ""
+                    if isinstance(body, dict):
+                        code = str(body.get("error_code") or
+                                   (body.get("data") or {}).get("error_code") or "")
+                    fail_reasons.append(
+                        f"cat={cat} 행 없음"
+                        + (f" error_code={code}" if code else f" 응답={str(body)[:120]}")
+                    )
+                return found
+            except Exception as e:
+                fail_reasons.append(f"cat={cat} {type(e).__name__}: {str(e)[:100]}")
                 return []
 
-        rows = []
+        rows, used_day = [], ""
         async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
-            for r in await asyncio.gather(*[_fetch(client, c) for c in CATEGORY_CODES]):
-                rows.extend(r)
+            for back in range(0, 8):
+                day = (date.today() - timedelta(days=back)).isoformat()
+                batch = []
+                for r in await asyncio.gather(*[_fetch(client, c, day) for c in CATEGORY_CODES]):
+                    batch.extend(r)
+                if batch:
+                    rows, used_day = batch, day
+                    break
+                fail_reasons.append(f"{day}: 0건")
         _KAMIS_ROWS.update({"ts": time.time(), "rows": rows, "loaded": True})
-        print(f"[price_service] KAMIS loaded: {len(rows)}")
+        print(f"[price_service] KAMIS loaded: {len(rows)}" + (f" (기준일 {used_day})" if used_day else ""))
+        if not rows and fail_reasons:
+            print("[price_service] KAMIS 실패 사유:")
+            for reason in fail_reasons[:6]:
+                print(f"    - {reason}")
+            print("    ※ error_code 001=인증키 오류, 200=해당일 데이터 없음(주말·공휴일)")
+            print("      자세한 진단: cd backend && python check_kamis.py")
         return rows
 
 
@@ -597,6 +651,8 @@ def _kamis_query(keyword: str, rows: List[Dict], amount_g: float) -> Optional[Tu
                 per100g = p / g * 100
                 if _is_realistic(keyword, per100g):
                     return (per100g, per100g / 100 * amount_g, f"KAMIS {names[i]}")
+                print(f"[price_service] KAMIS 값이 상한 초과로 제외됨: "
+                      f"'{keyword}' {per100g:,.0f}원/100g ({names[i]}, {row.get('unit')})")
 
     matches = get_close_matches(keyword, clean, n=1, cutoff=0.55)
     if matches:
@@ -651,22 +707,15 @@ async def _naver_query(keyword: str, amount_g: float) -> Optional[Tuple]:
             if w > 0:
                 per100g = lp / w * 100
             elif lp <= 5000:
-                # [주의] 중량/개수 정보를 상품명에서 전혀 못 찾은 경우의 최후 폴백.
-                # 가격이 낮으면 소량 조미료류일 가능성이 높다고 가정하고
-                # 상품 가격 자체를 100g당 가격으로 간주함 — 부정확할 수 있으므로
-                # PIECE_GRAMS/중량 표기 매칭이 가능한 재료는 위 분기에서 먼저 처리되도록
-                # PIECE_GRAMS 테이블을 계속 채워나가는 것이 근본적인 해결책.
                 per100g = lp
             else:
                 continue
 
-            # 상한선 체크 (네이버 단계에서 바로 필터링)
             if _is_realistic(keyword, per100g):
                 per100g_list.append(per100g)
                 titles.append(title)
 
         if not per100g_list:
-            # 통과된 결과 없음 → 캐시에 None 저장 (재검색 방지)
             _NAVER_MEM[keyword] = None
             _NAVER_TS[keyword]  = now
             return None
@@ -710,7 +759,7 @@ async def get_price_for_ingredient(standard_nm: str, amount_g: float) -> Dict:
       2) 재료명 정규화 (규칙 기반)
       3) 무료 재료 → 0원
       4) KAMIS → 상한선 체크 후 반환
-      5) 네이버 → 상한선 체크 후 반환 or STANDARD_AVERAGE
+      5) 네이버 쇼핑 → 상한선 체크 후 반환 or STANDARD_AVERAGE
       6) STANDARD_AVERAGE 최후 수단
     """
     EMPTY = {"matched_name": "", "unit": "", "unit_price_krw": 0.0,

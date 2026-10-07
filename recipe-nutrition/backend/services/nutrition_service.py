@@ -52,7 +52,7 @@ ALIASES = {
     "애호박": ["애호박", "호박"], "단호박": ["단호박"],
     "오이": ["오이"], "무": ["무", "무우"],
     "버섯": ["버섯", "느타리버섯", "표고버섯", "새송이버섯", "팽이버섯"],
-    "브로콜리": ["브로콜리"], "시금치": ["시금치"], "부추": ["부추"],
+    "시금치": ["시금치"], "부추": ["부추"],
     "콩나물": ["콩나물"], "숙주": ["숙주", "숙주나물"],
     "상추": ["상추", "양상추"], "깻잎": ["깻잎"],
     "미나리": ["미나리"], "쑥갓": ["쑥갓"],
@@ -74,6 +74,97 @@ ALIASES = {
     "카레가루": ["카레가루", "카레"], "빵": ["빵", "식빵"],
     "견과류": ["견과류", "아몬드", "호두", "땅콩"],
     "소금": ["소금", "천일염"],
+
+    "전분": ["전분", "녹말가루", "녹말", "물전분", "전분물", "타피오카 전분"],
+    "브로콜리": ["브로콜리", "브로컬리", "브로콜리니"],
+    "쌀가루": ["쌀가루", "멥쌀가루", "백미가루"],
+    "어린잎채소": ["어린잎채소", "어린잎", "새싹채소", "새싹", "곁들임채소 어린잎", "새싹믹스"],
+    "떡볶이떡": ["떡볶이떡", "떡볶이 떡", "가래떡", "누들 떡볶이 떡", "밀떡"],
+    "와사비": ["와사비", "고추냉이", "연와사비"],
+    "유부": ["유부", "조미유부"],
+    "관자": ["관자", "패주", "가리비관자"],
+    "가다랑어포": ["가다랑어포", "가쓰오부시", "가쓰오부시가루"],
+    "셀러리": ["셀러리", "샐러리", "셀러리 줄기", "셀러리다진것"],
+    "레드와인": ["레드와인", "적포도주", "와인"],
+    "육수": ["육수", "닭육수", "치킨스톡", "닭 스톡", "멸치육수", "채소육수"],
+    "닭육수": ["닭육수", "치킨스톡", "닭 스톡"],
+
+    # [FIX] 같은 재료의 다른 표기를 하나로 묶는다.
+    # '흰후추'·'통후추'·'백후추'·'후추가루'가 각각 따로 AI 조회되던 것을
+    # '후추' 하나로 처리한다. 표기 차이만으로 중복 호출되던 낭비를 없앤다.
+    "파인애플": ["배 저나트륨파인애플소스 파인애플", "파인애플 통조림", "파인애플 통조림 국물", "파인애플주스", "파인애플청", "파인애플통조림"],
+    "바질잎": ["건바질", "바질 잎", "바질 페스토", "바질다진것", "바질마른것", "바질마른것 배"],
+    "타임": ["건타임", "이탈리안시즈닝 타임", "타임 마른것", "타임다진것 0 5", "타임마른것"],
+    "후추": ["백후추", "통후추", "후추가루", "흰후추"],
+    "우엉": ["곁들이 샐러드 우엉", "뿌리채소조림 우엉", "소 우엉", "필수재료 우엉"],
+    "옥수수": ["옥수수알", "옥수수콘", "캔 옥수수", "캔옥수수"],
+    "누룽지": ["누룽지 50", "누룽지 밥", "누룽지가루 7 5", "시판 누룽지"],
+    "오레가노": ["오레가노 다진것", "오레가노다진것", "오레가노마른것"],
+    "오미자": ["오미자물", "오미자액", "오미자엑기스"],
+    "겨자": ["발효겨자", "씨겨자", "적겨자"],
+    "요구르트": ["플레인 요구르트", "플레인요구르트", "호상요구르트"],
+    "수박": ["수박 속껍질", "수박껍질", "후추 소스 수박"],
+    "매실원액": ["매실농축액", "매실엑기스", "매실장아찌"],
+    "물파래": ["파래 10", "파래김", "파래김 0 5"],
+    "월계수잎": ["월계수 잎", "월계수잎마른것"],
+    "청경채": ["청경채 20", "필수 재료 청경채"],
+    "완두콩": ["완두콩드레싱 삶은 완두콩", "완두콩알"],
+    "계피": ["계피가루", "통계피"],
+    "키위": ["키위샐러드 키위", "키위소스"],
+    "아보카도": ["냉동 아보카도", "아보카도작은것"],
+    "낙지": ["낙지 다리", "낙지다리"],
+    "케일": ["보라로즈케일", "흰로즈케일"],
+    "크림": ["화이트크림", "휘핑크림"],
+    "망고": ["레드와인 200cc 망고", "망고퓨레"],
+    "라임": ["라임주스", "라임즙"],
+    "가자미": ["가자미 50", "가자미살"],
+    "잡곡": ["잡곡밥", "잡곡밥흑미 검은콩"],
+    "병아리콩": ["병아리콩 삶은 물", "불린 병아리콩"],
+    "다크초콜릿": ["블랙초콜릿", "초콜릿 카카오매스"],
+    "참나물 페스토 참나물": ["참나물 10", "필수 재료 참나물"],
+    "파슬리가루": ["파슬리말린것"],
+    "아스파라거스": ["곁들임채소 아스파라거스"],
+    "라면": ["굵은 면발 라면"],
+    "젤라틴": ["판젤라틴"],
+    "스파게티": ["스파게티면"],
+    "취나물": ["건취나물"],
+    "귀리": ["귀리밥"],
+    "애플민트": ["애플민트잎"],
+    "포도": ["청포도"],
+    "삼치": ["필수재료 삼치"],
+    "딸기잼": ["냉동딸기"],
+    "보리": ["찰보리"],
+    "녹차가루": ["가루녹차"],
+    "코코넛밀크": ["코코넛 밀크"],
+    "청국장": ["생청국장"],
+    "콜라비": ["필수재료 콜라비"],
+    "한천": ["한천가루"],
+    "달래": ["달래 5"],
+    "소라": ["소라살"],
+    "로즈메리": ["건로즈메리"],
+    "민트": ["민트잎"],
+    "토란": ["알토란"],
+    "두반장": ["두반장 1"],
+    "도토리묵": ["건도토리묵"],
+    "수수": ["볶은수수"],
+    "근대": ["적근대"],
+    "코코넛오일": ["코코넛 오일"],
+    "오리고기": ["필수 재료 오리고기"],
+    "복숭아": ["천도복숭아"],
+    "복분자": ["복분자소스 복분자"],
+    "석류주스": ["석류 원액"],
+    "레드치커리": ["그린치커리"],
+    "가지 1": ["필수 재료 가지"],
+    "천연조미료": ["수제조미료"],
+    "꽁치": ["꽁치살"],
+    "소불고기": ["필수 재료 소불고기"],
+    "알비트": ["국물 비트"],
+    "갈치": ["갈치구이 갈치"],
+    "메이플시럽": ["아가베 시럽"],
+    "자몽": ["자몽주수"],
+    "옥수수가루": ["옥수수가루플렌타가루"],
+    "분유": ["탈지분유"],
+    "유자": ["유자필"],
 }
 
 _FLAT_ALIASES = sorted(
@@ -89,6 +180,231 @@ _FLAT_ALIASES = sorted(
 # 여기 없는 재료만 아래 AI 배치 추정으로 넘어가게 함.
 # ─────────────────────────────────────────────────────────────
 LOCAL_NUTRITION_100G: Dict[str, Dict[str, float]] = {
+
+    # 4차 — 정확 대응 항목이 없어 근사한 재료 (근거를 주석에 명시)
+    "어린잎채소":                {"protein_g":   1.9, "fat_g":   0.4, "carb_g":   3.5, "sugar_g":   1.2, "fiber_g":   2.4, "sodium_mg":     17, "calcium_mg":    95},  # 어린잎·새싹 혼합 → 엽채류 대표값(상추)으로 근사
+    "가다랑어포":                {"protein_g":  25.9, "fat_g":   1.8, "carb_g":   0.3, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     44, "calcium_mg":    15},  # 가쓰오부시 → 가다랑어 생것. 건조품이라 실제는 더 농축
+
+    # 3차 보강 — 국가표준식품성분표에 다른 이름으로 등재된 재료
+    "곶감":                   {"protein_g":   1.8, "fat_g":   0.1, "carb_g":  58.9, "sugar_g":  27.0, "fiber_g":   9.7, "sodium_mg":      1, "calcium_mg":    18},
+    "관자":                   {"protein_g":  16.9, "fat_g":   0.3, "carb_g":   3.5, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":    120, "calcium_mg":     7},
+    "꽃게":                   {"protein_g":  16.2, "fat_g":   0.7, "carb_g":   0.4, "sugar_g":   0.4, "fiber_g":   0.0, "sodium_mg":    418, "calcium_mg":   127},
+    "떡볶이떡":                 {"protein_g":   3.7, "fat_g":   0.4, "carb_g":  48.8, "sugar_g":   0.1, "fiber_g":   0.7, "sodium_mg":    261, "calcium_mg":    10},
+    "백미":                   {"protein_g":   6.4, "fat_g":   1.1, "carb_g":  79.0, "sugar_g":   0.2, "fiber_g":   0.5, "sodium_mg":      2, "calcium_mg":     7},
+    "수삼":                   {"protein_g":   4.1, "fat_g":   0.8, "carb_g":  18.9, "sugar_g":   8.1, "fiber_g":   2.4, "sodium_mg":     12, "calcium_mg":    84},
+    "와사비":                  {"protein_g":   2.9, "fat_g":   0.5, "carb_g":  23.7, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      1, "calcium_mg":    41},
+    "유부":                   {"protein_g":  26.1, "fat_g":  34.2, "carb_g":   7.9, "sugar_g":   0.4, "fiber_g":   1.5, "sodium_mg":      7, "calcium_mg":   584},
+    "육수":                   {"protein_g":   1.3, "fat_g":   0.7, "carb_g":   0.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     13, "calcium_mg":    17},
+    "이스트":                  {"protein_g":  37.1, "fat_g":   6.8, "carb_g":  43.1, "sugar_g":   0.1, "fiber_g":  32.6, "sodium_mg":    120, "calcium_mg":    19},
+    "적채":                   {"protein_g":   2.2, "fat_g":   0.2, "carb_g":   7.7, "sugar_g":   4.1, "fiber_g":   2.8, "sodium_mg":      6, "calcium_mg":    30},
+    "참치":                   {"protein_g":  24.0, "fat_g":   8.1, "carb_g":   0.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     62, "calcium_mg":    27},
+    "청포묵":                  {"protein_g":   0.1, "fat_g":   0.0, "carb_g":   9.8, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     92, "calcium_mg":     5},
+    "캐슈넛":                  {"protein_g":  16.8, "fat_g":  47.8, "carb_g":  30.2, "sugar_g":   5.0, "fiber_g":   3.3, "sodium_mg":    308, "calcium_mg":    43},
+    "콜리플라워":                {"protein_g":   2.2, "fat_g":   0.5, "carb_g":   4.8, "sugar_g":   2.3, "fiber_g":   4.6, "sodium_mg":     13, "calcium_mg":    14},
+    "홍시":                   {"protein_g":   0.4, "fat_g":   0.1, "carb_g":  15.1, "sugar_g":  11.4, "fiber_g":   1.9, "sodium_mg":      1, "calcium_mg":     8},
+
+    # 2차 보강
+    "홍합":                   {"protein_g":  13.8, "fat_g":   1.2, "carb_g":   3.1, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":    43},
+    "베이킹파우더":               {"protein_g":   0.1, "fat_g":   0.0, "carb_g":  24.1, "sugar_g":   0.0, "fiber_g":   0.2, "sodium_mg":   7893, "calcium_mg":  7364},
+    "레드와인":                 {"protein_g":   0.2, "fat_g":   0.0, "carb_g":   1.9, "sugar_g":   0.0, "fiber_g":   1.5, "sodium_mg":      2, "calcium_mg":     9},
+
+    # 빈출 재료
+    "케첩":                   {"protein_g":   1.8, "fat_g":   0.1, "carb_g":  29.2, "sugar_g":  20.8, "fiber_g":   1.8, "sodium_mg":   1056, "calcium_mg":    19},
+    "올리고당":                 {"protein_g":   0.0, "fat_g":   0.0, "carb_g":  77.5, "sugar_g":  30.6, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":     0},
+    "빵가루":                  {"protein_g":  11.9, "fat_g":   2.0, "carb_g":  77.0, "sugar_g":   4.7, "fiber_g":   4.2, "sodium_mg":    306, "calcium_mg":    21},
+    "정종":                   {"protein_g":   0.4, "fat_g":   0.0, "carb_g":   4.2, "sugar_g":   3.1, "fiber_g":   0.0, "sodium_mg":      3, "calcium_mg":     4},
+    "닭육수":                  {"protein_g":   1.3, "fat_g":   0.7, "carb_g":   0.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     13, "calcium_mg":    17},
+    "굴소스":                  {"protein_g":   2.1, "fat_g":   0.1, "carb_g":  27.1, "sugar_g":  20.6, "fiber_g":   0.2, "sodium_mg":   4608, "calcium_mg":    12},
+    "쌀가루":                  {"protein_g":   6.4, "fat_g":   1.1, "carb_g":  79.0, "sugar_g":   0.2, "fiber_g":   0.5, "sodium_mg":      2, "calcium_mg":     7},
+
+    # 국가표준식품성분표 자동 매칭
+    "후추":                   {"protein_g":  12.9, "fat_g":   5.0, "carb_g":  66.3, "sugar_g":   0.7, "fiber_g":  25.6, "sodium_mg":      6, "calcium_mg":   391},
+    "전분":                   {"protein_g":   0.1, "fat_g":   0.0, "carb_g":  82.7, "sugar_g":   0.1, "fiber_g":   0.0, "sodium_mg":     22, "calcium_mg":     4},
+    "즉석밥":                  {"protein_g":   2.1, "fat_g":   0.3, "carb_g":  33.6, "sugar_g":   1.0, "fiber_g":   1.2, "sodium_mg":      1, "calcium_mg":     5},
+    "맛술":                   {"protein_g":   0.3, "fat_g":   0.3, "carb_g":  35.5, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     32, "calcium_mg":     1},
+    "바나나":                  {"protein_g":   1.1, "fat_g":   0.2, "carb_g":  20.0, "sugar_g":  14.2, "fiber_g":   2.2, "sodium_mg":      0, "calcium_mg":     6},
+    "파인애플":                 {"protein_g":   0.5, "fat_g":   0.1, "carb_g":  14.1, "sugar_g":  10.9, "fiber_g":   1.3, "sodium_mg":      0, "calcium_mg":    13},
+    "월계수잎":                 {"protein_g":   7.6, "fat_g":   8.4, "carb_g":  75.0, "sugar_g":   0.0, "fiber_g":  26.3, "sodium_mg":     23, "calcium_mg":   834},
+    "파슬리가루":                {"protein_g":  20.2, "fat_g":   3.4, "carb_g":  61.6, "sugar_g":   5.7, "fiber_g":  21.7, "sodium_mg":    630, "calcium_mg":  1129},
+    "연근":                   {"protein_g":   1.6, "fat_g":   0.1, "carb_g":  17.3, "sugar_g":   1.8, "fiber_g":   3.3, "sodium_mg":     21, "calcium_mg":    28},
+    "청경채":                  {"protein_g":   1.4, "fat_g":   0.1, "carb_g":   1.6, "sugar_g":   0.0, "fiber_g":   1.2, "sodium_mg":     17, "calcium_mg":    87},
+    "완두콩":                  {"protein_g":   7.9, "fat_g":   0.4, "carb_g":  19.5, "sugar_g":   1.7, "fiber_g":   8.4, "sodium_mg":      0, "calcium_mg":    36},
+    "계피":                   {"protein_g":   3.6, "fat_g":   1.1, "carb_g":  80.9, "sugar_g":   1.9, "fiber_g":  59.5, "sodium_mg":     18, "calcium_mg":  1280},
+    "주꾸미":                  {"protein_g":  10.8, "fat_g":   0.5, "carb_g":   0.5, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":    19},
+    "오레가노":                 {"protein_g":   9.0, "fat_g":   4.3, "carb_g":  68.9, "sugar_g":   4.1, "fiber_g":  42.5, "sodium_mg":     25, "calcium_mg":  1597},
+    "우엉":                   {"protein_g":   2.6, "fat_g":   0.1, "carb_g":  15.3, "sugar_g":   2.9, "fiber_g":   4.6, "sodium_mg":      6, "calcium_mg":    46},
+    "젤라틴":                  {"protein_g":   7.8, "fat_g":   0.0, "carb_g":  90.5, "sugar_g":  86.0, "fiber_g":   0.0, "sodium_mg":    466, "calcium_mg":     3},
+    "요구르트":                 {"protein_g":   1.3, "fat_g":   0.0, "carb_g":  15.2, "sugar_g":  12.5, "fiber_g":   0.6, "sodium_mg":     17, "calcium_mg":    45},
+    "키위":                   {"protein_g":   0.8, "fat_g":   0.3, "carb_g":  14.0, "sugar_g":   7.1, "fiber_g":   2.1, "sodium_mg":      1, "calcium_mg":    19},
+    "스파게티":                 {"protein_g":  12.6, "fat_g":   1.5, "carb_g":  74.5, "sugar_g":   2.0, "fiber_g":   2.7, "sodium_mg":      6, "calcium_mg":    24},
+    "아스파라거스":               {"protein_g":   2.0, "fat_g":   0.3, "carb_g":   2.5, "sugar_g":   1.4, "fiber_g":   1.7, "sodium_mg":      3, "calcium_mg":    11},
+    "바질잎":                  {"protein_g":   2.4, "fat_g":   0.7, "carb_g":   5.6, "sugar_g":   0.8, "fiber_g":   2.6, "sodium_mg":      3, "calcium_mg":   238},
+    "라면":                   {"protein_g":   8.6, "fat_g":  12.6, "carb_g":  67.1, "sugar_g":   2.5, "fiber_g":   2.3, "sodium_mg":   1472, "calcium_mg":   203},
+    "옥수수":                  {"protein_g":   4.0, "fat_g":   1.5, "carb_g":  23.4, "sugar_g":   4.9, "fiber_g":   3.1, "sodium_mg":      0, "calcium_mg":     3},
+    "타임":                   {"protein_g":   6.5, "fat_g":   5.2, "carb_g":  69.8, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     13, "calcium_mg":  1700},
+    "귀리":                   {"protein_g":   9.9, "fat_g":   8.8, "carb_g":  68.0, "sugar_g":   0.9, "fiber_g":   7.6, "sodium_mg":      3, "calcium_mg":    52},
+    "강황가루":                 {"protein_g":   6.7, "fat_g":   3.2, "carb_g":  74.3, "sugar_g":   3.3, "fiber_g":  17.9, "sodium_mg":     19, "calcium_mg":   125},
+    "고사리":                  {"protein_g":   2.9, "fat_g":   0.2, "carb_g":   3.8, "sugar_g":   0.2, "fiber_g":   3.4, "sodium_mg":      0, "calcium_mg":     9},
+    "아보카도":                 {"protein_g":   2.0, "fat_g":  14.7, "carb_g":   8.5, "sugar_g":   0.7, "fiber_g":   6.7, "sodium_mg":      7, "calcium_mg":    12},
+    "낙지":                   {"protein_g":  16.3, "fat_g":   0.4, "carb_g":   0.0, "sugar_g":   0.2, "fiber_g":   0.0, "sodium_mg":    479, "calcium_mg":    26},
+    "오미자":                  {"protein_g":   1.9, "fat_g":   2.8, "carb_g":  14.2, "sugar_g":   1.7, "fiber_g":   6.0, "sodium_mg":      1, "calcium_mg":    15},
+    "탄산수":                  {"protein_g":   0.0, "fat_g":   0.0, "carb_g":   0.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      1, "calcium_mg":     1},
+    "미숫가루":                 {"protein_g":  14.4, "fat_g":   5.3, "carb_g":  76.7, "sugar_g":   1.2, "fiber_g":  12.8, "sodium_mg":      5, "calcium_mg":    61},
+    "케일":                   {"protein_g":   3.4, "fat_g":   0.4, "carb_g":   4.7, "sugar_g":   0.7, "fiber_g":   3.3, "sodium_mg":     47, "calcium_mg":   371},
+    "겨자":                   {"protein_g":   3.0, "fat_g":   0.2, "carb_g":   4.2, "sugar_g":   0.0, "fiber_g":   2.6, "sodium_mg":     36, "calcium_mg":   256},
+    "누룽지":                  {"protein_g":   8.0, "fat_g":   1.1, "carb_g":  88.8, "sugar_g":   0.1, "fiber_g":   2.3, "sodium_mg":      2, "calcium_mg":    11},
+    "도라지":                  {"protein_g":   2.0, "fat_g":   0.1, "carb_g":  15.2, "sugar_g":   1.1, "fiber_g":   4.2, "sodium_mg":      3, "calcium_mg":    40},
+    "연겨자":                  {"protein_g":   8.0, "fat_g":  12.7, "carb_g":  37.4, "sugar_g":  19.5, "fiber_g":  19.4, "sodium_mg":   1423, "calcium_mg":   101},
+    "더덕":                   {"protein_g":   2.3, "fat_g":   0.8, "carb_g":  17.6, "sugar_g":   4.9, "fiber_g":   3.7, "sodium_mg":      0, "calcium_mg":    30},
+    "취나물":                  {"protein_g":   4.2, "fat_g":   0.3, "carb_g":  11.3, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     38, "calcium_mg":    83},
+    "포도":                   {"protein_g":   0.4, "fat_g":   0.1, "carb_g":  15.3, "sugar_g":  14.3, "fiber_g":   1.0, "sodium_mg":      1, "calcium_mg":     4},
+    "칠리소스":                 {"protein_g":   1.8, "fat_g":   0.1, "carb_g":  26.3, "sugar_g":   0.0, "fiber_g":   1.9, "sodium_mg":   1200, "calcium_mg":    27},
+    "체리":                   {"protein_g":   1.4, "fat_g":   0.1, "carb_g":  14.3, "sugar_g":   8.0, "fiber_g":   2.3, "sodium_mg":      1, "calcium_mg":    11},
+    "어묵":                   {"protein_g":  11.4, "fat_g":   4.5, "carb_g":  20.7, "sugar_g":   3.5, "fiber_g":   0.3, "sodium_mg":    699, "calcium_mg":    49},
+    "파슬리다진것":               {"protein_g":   2.4, "fat_g":   0.3, "carb_g":   3.4, "sugar_g":   0.4, "fiber_g":   2.2, "sodium_mg":     10, "calcium_mg":   149},
+    "애플민트":                 {"protein_g":   2.8, "fat_g":   0.4, "carb_g":   4.7, "sugar_g":   0.0, "fiber_g":   3.7, "sodium_mg":      2, "calcium_mg":   153},
+    "녹차가루":                 {"protein_g":  22.4, "fat_g":   2.5, "carb_g":  66.9, "sugar_g":   0.0, "fiber_g":  40.4, "sodium_mg":     23, "calcium_mg":   717},
+    "망고":                   {"protein_g":   0.7, "fat_g":   0.1, "carb_g":  15.4, "sugar_g":  13.7, "fiber_g":   1.5, "sodium_mg":      0, "calcium_mg":     7},
+    "문어":                   {"protein_g":  16.4, "fat_g":   0.7, "carb_g":   0.1, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":    280, "calcium_mg":    16},
+    "맛살":                   {"protein_g":   7.7, "fat_g":   1.1, "carb_g":  19.4, "sugar_g":   3.5, "fiber_g":   0.0, "sodium_mg":    668, "calcium_mg":   303},
+    "은행":                   {"protein_g":   4.7, "fat_g":   1.5, "carb_g":  42.8, "sugar_g":   3.0, "fiber_g":   2.2, "sodium_mg":      1, "calcium_mg":     7},
+    "삼치":                   {"protein_g":  20.1, "fat_g":   2.9, "carb_g":   0.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     39, "calcium_mg":     5},
+    "딸기잼":                  {"protein_g":   0.8, "fat_g":   0.1, "carb_g":   8.2, "sugar_g":   6.1, "fiber_g":   1.5, "sodium_mg":      1, "calcium_mg":    12},
+    "보리":                   {"protein_g":   8.8, "fat_g":   1.7, "carb_g":  76.9, "sugar_g":   0.9, "fiber_g":  10.9, "sodium_mg":      3, "calcium_mg":    33},
+    "크림":                   {"protein_g":   2.0, "fat_g":  37.8, "carb_g":   5.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     25, "calcium_mg":    63},
+    "셀러리":                  {"protein_g":   1.0, "fat_g":   0.1, "carb_g":   3.9, "sugar_g":   1.2, "fiber_g":   2.2, "sodium_mg":     20, "calcium_mg":    88},
+    "소라":                   {"protein_g":  20.7, "fat_g":   0.3, "carb_g":   4.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":    92},
+    "라임":                   {"protein_g":   0.7, "fat_g":   0.2, "carb_g":  10.5, "sugar_g":   1.7, "fiber_g":   2.8, "sodium_mg":      2, "calcium_mg":    33},
+    "가자미":                  {"protein_g":  22.1, "fat_g":   3.7, "carb_g":   0.3, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":    230, "calcium_mg":    40},
+    "수박":                   {"protein_g":   0.8, "fat_g":   0.1, "carb_g":   7.6, "sugar_g":   7.1, "fiber_g":   0.2, "sodium_mg":      1, "calcium_mg":     6},
+    "참외":                   {"protein_g":   0.6, "fat_g":   0.0, "carb_g":  10.5, "sugar_g":   8.8, "fiber_g":   1.1, "sodium_mg":      2, "calcium_mg":     5},
+    "치자":                   {"protein_g":   1.3, "fat_g":   0.1, "carb_g":  14.9, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      8, "calcium_mg":    39},
+    "날치알":                  {"protein_g":  22.2, "fat_g":   0.5, "carb_g":   0.1, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":    20},
+    "두릅":                   {"protein_g":   2.4, "fat_g":   0.2, "carb_g":   4.8, "sugar_g":   0.8, "fiber_g":   4.4, "sodium_mg":      2, "calcium_mg":    80},
+    "장어":                   {"protein_g":  17.9, "fat_g":   9.9, "carb_g":   0.4, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":    81},
+    "청국장가루":                {"protein_g":  41.8, "fat_g":  21.6, "carb_g":  26.8, "sugar_g":   0.7, "fiber_g":  17.3, "sodium_mg":     12, "calcium_mg":   241},
+    "매생이":                  {"protein_g":   3.9, "fat_g":   3.3, "carb_g":   8.2, "sugar_g":   0.1, "fiber_g":   6.5, "sodium_mg":    104, "calcium_mg":    91},
+    "코코넛밀크":                {"protein_g":   2.3, "fat_g":  23.8, "carb_g":   5.5, "sugar_g":   3.3, "fiber_g":   2.2, "sodium_mg":     15, "calcium_mg":    16},
+    "청국장":                  {"protein_g":  20.8, "fat_g":   9.6, "carb_g":  12.8, "sugar_g":   1.9, "fiber_g":   8.8, "sodium_mg":   1135, "calcium_mg":   137},
+    "콜라비":                  {"protein_g":   1.2, "fat_g":   0.1, "carb_g":   5.2, "sugar_g":   1.6, "fiber_g":   2.4, "sodium_mg":      7, "calcium_mg":    42},
+    "한천":                   {"protein_g":   2.3, "fat_g":   0.1, "carb_g":  74.6, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":   523},
+    "달래":                   {"protein_g":   2.4, "fat_g":   0.3, "carb_g":  13.4, "sugar_g":   2.8, "fiber_g":   2.9, "sodium_mg":      4, "calcium_mg":    83},
+    "로즈메리":                 {"protein_g":   4.9, "fat_g":  15.2, "carb_g":  64.1, "sugar_g":   0.0, "fiber_g":  42.6, "sodium_mg":     50, "calcium_mg":  1280},
+    "민트":                   {"protein_g":  17.5, "fat_g":   6.1, "carb_g":  56.2, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     28, "calcium_mg":  1763},
+    "코코넛오일":                {"protein_g":   0.0, "fat_g":  99.7, "carb_g":   0.3, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     18, "calcium_mg":    13},
+    "잡곡":                   {"protein_g":   9.8, "fat_g":   2.1, "carb_g":  73.4, "sugar_g":   0.9, "fiber_g":   6.2, "sodium_mg":      4, "calcium_mg":    27},
+    "복숭아":                  {"protein_g":   0.6, "fat_g":   0.0, "carb_g":  13.1, "sugar_g":   9.4, "fiber_g":   2.6, "sodium_mg":      0, "calcium_mg":     4},
+    "병아리콩":                 {"protein_g":  17.8, "fat_g":   5.7, "carb_g":  63.3, "sugar_g":   2.5, "fiber_g":  14.5, "sodium_mg":      3, "calcium_mg":   130},
+    "다크초콜릿":                {"protein_g":   7.8, "fat_g":  42.6, "carb_g":  45.9, "sugar_g":  24.0, "fiber_g":  10.9, "sodium_mg":     20, "calcium_mg":    73},
+    "매실원액":                 {"protein_g":   1.1, "fat_g":   1.1, "carb_g":   7.8, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      3, "calcium_mg":    28},
+    "물파래":                  {"protein_g":   2.2, "fat_g":   0.1, "carb_g":   3.0, "sugar_g":   0.0, "fiber_g":   2.1, "sodium_mg":    122, "calcium_mg":    55},
+    "아욱":                   {"protein_g":   3.1, "fat_g":   0.3, "carb_g":   7.6, "sugar_g":   0.0, "fiber_g":   4.5, "sodium_mg":     37, "calcium_mg":   267},
+    "연유":                   {"protein_g":   5.6, "fat_g":   5.7, "carb_g":  13.1, "sugar_g":   5.0, "fiber_g":   0.0, "sodium_mg":     87, "calcium_mg":   165},
+    "바질가루":                 {"protein_g":   2.8, "fat_g":   0.7, "carb_g":   5.9, "sugar_g":   0.4, "fiber_g":   2.7, "sodium_mg":      1, "calcium_mg":   270},
+    "라즈베리":                 {"protein_g":   1.2, "fat_g":   0.7, "carb_g":  11.9, "sugar_g":   4.4, "fiber_g":   6.5, "sodium_mg":      1, "calcium_mg":    25},
+    "까나리액젓":                {"protein_g":  16.0, "fat_g":   4.8, "carb_g":   0.3, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":    120, "calcium_mg":   338},
+    "멜론":                   {"protein_g":   0.3, "fat_g":   0.1, "carb_g":   9.6, "sugar_g":   7.3, "fiber_g":   1.0, "sodium_mg":     25, "calcium_mg":    10},
+    "옥수수전분":                {"protein_g":   0.2, "fat_g":   0.6, "carb_g":  89.6, "sugar_g":   0.1, "fiber_g":   0.4, "sodium_mg":      6, "calcium_mg":     3},
+    "자두":                   {"protein_g":   0.5, "fat_g":   0.6, "carb_g":   5.3, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      1, "calcium_mg":     3},
+    "토란":                   {"protein_g":   2.1, "fat_g":   0.1, "carb_g":  15.8, "sugar_g":   0.0, "fiber_g":   2.8, "sodium_mg":      2, "calcium_mg":    11},
+    "두반장":                  {"protein_g":   3.0, "fat_g":   2.4, "carb_g":  15.1, "sugar_g":   7.6, "fiber_g":   3.9, "sodium_mg":   4602, "calcium_mg":    23},
+    "도토리묵":                 {"protein_g":   0.3, "fat_g":   0.1, "carb_g":  11.2, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     76, "calcium_mg":    15},
+    "수수":                   {"protein_g":  11.7, "fat_g":   3.0, "carb_g":  73.6, "sugar_g":   0.5, "fiber_g":   6.4, "sodium_mg":      6, "calcium_mg":     8},
+    "근대":                   {"protein_g":   1.8, "fat_g":   0.2, "carb_g":   3.3, "sugar_g":   0.0, "fiber_g":   2.7, "sodium_mg":    173, "calcium_mg":    49},
+    "오리고기":                 {"protein_g":  21.0, "fat_g":   3.1, "carb_g":   0.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     83, "calcium_mg":    11},
+    "참나물 페스토 참나물":          {"protein_g":   3.5, "fat_g":   0.4, "carb_g":   7.6, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      4, "calcium_mg":   102},
+    "느타리":                  {"protein_g":   2.6, "fat_g":   0.1, "carb_g":   4.7, "sugar_g":   0.7, "fiber_g":   2.9, "sodium_mg":      2, "calcium_mg":     0},
+    "퀴노아":                  {"protein_g":   9.6, "fat_g":   3.3, "carb_g":  72.6, "sugar_g":   1.3, "fiber_g":   7.7, "sodium_mg":      0, "calcium_mg":    63},
+    "정향":                   {"protein_g":   7.2, "fat_g":  13.6, "carb_g":  66.4, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":    280, "calcium_mg":   640},
+    "시래기":                  {"protein_g":   1.8, "fat_g":   0.2, "carb_g":   6.2, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     75, "calcium_mg":   630},
+    "기름":                   {"protein_g":   0.0, "fat_g":  99.8, "carb_g":   0.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":     0},
+    "당귀잎":                  {"protein_g":   3.2, "fat_g":   0.4, "carb_g":   8.8, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      3, "calcium_mg":    80},
+    "뽕잎가루":                 {"protein_g":  26.2, "fat_g":   3.0, "carb_g":  53.2, "sugar_g":   0.0, "fiber_g":  38.4, "sodium_mg":     11, "calcium_mg":  1348},
+    "피스타치오":                {"protein_g":  26.0, "fat_g":  48.9, "carb_g":  20.8, "sugar_g":   8.2, "fiber_g":  10.0, "sodium_mg":      4, "calcium_mg":   101},
+    "돌나물":                  {"protein_g":   1.2, "fat_g":   0.1, "carb_g":   3.2, "sugar_g":   0.0, "fiber_g":   1.0, "sodium_mg":      0, "calcium_mg":   190},
+    "꼬막":                   {"protein_g":  12.6, "fat_g":   0.3, "carb_g":   1.6, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":    83},
+    "아귀":                   {"protein_g":  14.1, "fat_g":   0.2, "carb_g":   0.5, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":    10},
+    "조청":                   {"protein_g":   1.4, "fat_g":   0.3, "carb_g":  77.0, "sugar_g":  46.9, "fiber_g":   1.0, "sodium_mg":      3, "calcium_mg":     4},
+    "무청":                   {"protein_g":   1.8, "fat_g":   0.4, "carb_g":   4.3, "sugar_g":   0.8, "fiber_g":   2.9, "sodium_mg":     45, "calcium_mg":   200},
+    "건크랜베리":                {"protein_g":   0.5, "fat_g":   0.1, "carb_g":  12.0, "sugar_g":   4.3, "fiber_g":   3.6, "sodium_mg":      2, "calcium_mg":     8},
+    "머스타드":                 {"protein_g":   7.7, "fat_g":   6.9, "carb_g":  11.4, "sugar_g":   2.4, "fiber_g":   9.0, "sodium_mg":   1953, "calcium_mg":   133},
+    "식혜":                   {"protein_g":   0.1, "fat_g":   0.0, "carb_g":   7.9, "sugar_g":   5.9, "fiber_g":   1.0, "sodium_mg":      2, "calcium_mg":     3},
+    "대추고":                  {"protein_g":   1.4, "fat_g":   0.1, "carb_g":  27.6, "sugar_g":  24.3, "fiber_g":   3.0, "sodium_mg":      1, "calcium_mg":    14},
+    "스테비아":                 {"protein_g":   2.4, "fat_g":   0.3, "carb_g":   8.7, "sugar_g":   0.0, "fiber_g":   5.4, "sodium_mg":      1, "calcium_mg":   200},
+    "복분자":                  {"protein_g":   1.3, "fat_g":   0.7, "carb_g":  14.7, "sugar_g":   5.9, "fiber_g":   7.0, "sodium_mg":      2, "calcium_mg":    50},
+    "석류주스":                 {"protein_g":   0.3, "fat_g":   0.2, "carb_g":  20.7, "sugar_g":   9.9, "fiber_g":   5.8, "sodium_mg":      1, "calcium_mg":     6},
+    "레드치커리":                {"protein_g":   1.4, "fat_g":   0.2, "carb_g":  17.5, "sugar_g":   8.7, "fiber_g":   1.5, "sodium_mg":     50, "calcium_mg":    41},
+    "가지 1":                 {"protein_g":   1.1, "fat_g":   0.0, "carb_g":   4.4, "sugar_g":   2.3, "fiber_g":   2.7, "sodium_mg":      0, "calcium_mg":    16},
+    "천연조미료":                {"protein_g":   6.8, "fat_g":   0.1, "carb_g":   9.6, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":   5906, "calcium_mg":    10},
+    "꽁치":                   {"protein_g":  22.7, "fat_g":   4.7, "carb_g":   0.4, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     80, "calcium_mg":    42},
+    "소불고기":                 {"protein_g":  10.3, "fat_g":  13.1, "carb_g":   6.7, "sugar_g":   3.3, "fiber_g":   0.9, "sodium_mg":    468, "calcium_mg":    18},
+    "알비트":                  {"protein_g":   1.0, "fat_g":   0.1, "carb_g":   6.1, "sugar_g":   4.1, "fiber_g":   1.7, "sodium_mg":     19, "calcium_mg":     9},
+    "갈치":                   {"protein_g":  18.5, "fat_g":   7.5, "carb_g":   0.1, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":    100, "calcium_mg":    46},
+    "메이플시럽":                {"protein_g":   0.0, "fat_g":   0.1, "carb_g":  67.0, "sugar_g":  60.5, "fiber_g":   0.0, "sodium_mg":     12, "calcium_mg":   102},
+    "자몽":                   {"protein_g":   0.8, "fat_g":   0.1, "carb_g":   7.9, "sugar_g":   5.4, "fiber_g":   1.2, "sodium_mg":      1, "calcium_mg":    31},
+    "옥수수가루":                {"protein_g":   7.3, "fat_g":   1.0, "carb_g":  83.3, "sugar_g":   0.5, "fiber_g":   1.9, "sodium_mg":      2, "calcium_mg":     5},
+    "분유":                   {"protein_g":  14.0, "fat_g":  23.9, "carb_g":  56.6, "sugar_g":  47.3, "fiber_g":   0.0, "sodium_mg":    173, "calcium_mg":   680},
+    "유자":                   {"protein_g":   0.9, "fat_g":   0.1, "carb_g":  12.6, "sugar_g":   4.1, "fiber_g":   3.7, "sodium_mg":      3, "calcium_mg":    36},
+    "백합":                   {"protein_g":  11.7, "fat_g":   1.0, "carb_g":   3.6, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":   161},
+    "커피":                   {"protein_g":   0.0, "fat_g":   0.0, "carb_g":   0.5, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":     1},
+    "민어":                   {"protein_g":  18.0, "fat_g":   0.8, "carb_g":   0.5, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":    22},
+    "마":                    {"protein_g":   1.8, "fat_g":   0.1, "carb_g":  14.1, "sugar_g":   1.0, "fiber_g":   2.4, "sodium_mg":      4, "calcium_mg":     9},
+    "루꼴라":                  {"protein_g":   3.2, "fat_g":   0.4, "carb_g":   4.2, "sugar_g":   1.0, "fiber_g":   1.3, "sodium_mg":     13, "calcium_mg":   159},
+    "표고":                   {"protein_g":   2.7, "fat_g":   0.4, "carb_g":   7.4, "sugar_g":   0.4, "fiber_g":   5.0, "sodium_mg":      3, "calcium_mg":     4},
+    "블루베리소스 블루베리잼":         {"protein_g":   0.5, "fat_g":   0.1, "carb_g":  11.1, "sugar_g":   7.9, "fiber_g":   2.4, "sodium_mg":      0, "calcium_mg":     9},
+    "팽이":                   {"protein_g":  16.1, "fat_g":   1.4, "carb_g":   2.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     70, "calcium_mg":    10},
+    "말린 매생이":               {"protein_g":  20.6, "fat_g":   0.5, "carb_g":  40.6, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":   574},
+    "메밀묵":                  {"protein_g":   1.1, "fat_g":   0.4, "carb_g":  11.8, "sugar_g":   0.0, "fiber_g":   1.2, "sodium_mg":    132, "calcium_mg":     8},
+    "우렁":                   {"protein_g":  10.5, "fat_g":   1.4, "carb_g":   3.8, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     81, "calcium_mg":  1202},
+    "겨자분말":                 {"protein_g":  18.4, "fat_g":  22.7, "carb_g":  50.0, "sugar_g":   5.5, "fiber_g":  37.8, "sodium_mg":      1, "calcium_mg":   383},
+    "말린 자두":                {"protein_g":   2.5, "fat_g":   0.4, "carb_g":  62.0, "sugar_g":  34.5, "fiber_g":   6.9, "sodium_mg":      2, "calcium_mg":    48},
+    "명태":                   {"protein_g":  17.5, "fat_g":   0.7, "carb_g":   0.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":    132, "calcium_mg":   109},
+    "건조체리":                 {"protein_g":   0.3, "fat_g":   0.1, "carb_g":  31.5, "sugar_g":  21.5, "fiber_g":   1.4, "sodium_mg":      6, "calcium_mg":    68},
+    "울금가루":                 {"protein_g":   7.8, "fat_g":   3.0, "carb_g":  73.2, "sugar_g":   3.7, "fiber_g":  15.2, "sodium_mg":     30, "calcium_mg":    74},
+    "미더덕":                  {"protein_g":   4.3, "fat_g":   1.2, "carb_g":   4.1, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":    40},
+    "병어":                   {"protein_g":  16.4, "fat_g":   6.3, "carb_g":   0.3, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":    158, "calcium_mg":    22},
+    "비름나물":                 {"protein_g":   2.7, "fat_g":   0.3, "carb_g":   4.0, "sugar_g":   0.3, "fiber_g":   3.4, "sodium_mg":     65, "calcium_mg":   133},
+    "머위대":                  {"protein_g":   2.3, "fat_g":   0.1, "carb_g":   2.7, "sugar_g":   0.1, "fiber_g":   2.7, "sodium_mg":      2, "calcium_mg":   103},
+    "전복살":                  {"protein_g":  14.3, "fat_g":   0.7, "carb_g":   4.5, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":    52},
+    "오미자청":                 {"protein_g":   0.1, "fat_g":   0.3, "carb_g":  55.9, "sugar_g":  50.1, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":     2},
+    "스위트칠리":                {"protein_g":  15.0, "fat_g":   8.2, "carb_g":  60.1, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":   2500, "calcium_mg":   280},
+    "다슬기살":                 {"protein_g":  11.9, "fat_g":   1.2, "carb_g":   5.7, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":  1117},
+    "참다래":                  {"protein_g":   0.9, "fat_g":   1.1, "carb_g":  13.3, "sugar_g":   5.5, "fiber_g":   3.0, "sodium_mg":      1, "calcium_mg":    42},
+    "우동":                   {"protein_g":   3.1, "fat_g":   1.2, "carb_g":  30.5, "sugar_g":   0.3, "fiber_g":   1.8, "sodium_mg":    142, "calcium_mg":     9},
+    "잎녹차":                  {"protein_g":   0.1, "fat_g":   0.0, "carb_g":   0.4, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":     1},
+    "마카다미아":                {"protein_g":   8.3, "fat_g":  76.7, "carb_g":  12.2, "sugar_g":   0.0, "fiber_g":   6.2, "sodium_mg":    190, "calcium_mg":    47},
+    "비트가루":                 {"protein_g":   0.9, "fat_g":   0.1, "carb_g":   5.3, "sugar_g":   2.8, "fiber_g":   1.5, "sodium_mg":     20, "calcium_mg":     8},
+    "쌈추":                   {"protein_g":   3.1, "fat_g":   0.2, "carb_g":   4.3, "sugar_g":   0.0, "fiber_g":   3.2, "sodium_mg":     29, "calcium_mg":   129},
+    "블랙":                   {"protein_g":   1.3, "fat_g":   0.8, "carb_g":   9.6, "sugar_g":   5.0, "fiber_g":   4.2, "sodium_mg":      1, "calcium_mg":    29},
+    "구기자":                  {"protein_g":   6.3, "fat_g":   1.1, "carb_g":   7.0, "sugar_g":   0.8, "fiber_g":   5.1, "sodium_mg":      2, "calcium_mg":    10},
+    "올리브":                  {"protein_g":   0.0, "fat_g": 100.0, "carb_g":   0.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":     0},
+    "삶은 스파게티":              {"protein_g":   5.0, "fat_g":   1.0, "carb_g":  15.2, "sugar_g":   2.6, "fiber_g":   1.8, "sodium_mg":    238, "calcium_mg":    18},
+    "배즙 37 5":              {"protein_g":   0.2, "fat_g":   0.0, "carb_g":  10.3, "sugar_g":   8.1, "fiber_g":   0.0, "sodium_mg":      2, "calcium_mg":     2},
+    "스리라차":                 {"protein_g":   1.6, "fat_g":   0.6, "carb_g":  16.2, "sugar_g":  13.7, "fiber_g":   2.1, "sodium_mg":   1519, "calcium_mg":    15},
+    "산딸기":                  {"protein_g":   1.4, "fat_g":   0.2, "carb_g":  13.6, "sugar_g":   7.8, "fiber_g":   6.9, "sodium_mg":      0, "calcium_mg":    29},
+    "발사믹크림":                {"protein_g":   0.7, "fat_g":   0.0, "carb_g":  44.9, "sugar_g":  37.0, "fiber_g":   0.0, "sodium_mg":     56, "calcium_mg":    23},
+    "닭 육수":                 {"protein_g":   1.3, "fat_g":   0.7, "carb_g":   0.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     13, "calcium_mg":    17},
+    "아이스크림":                {"protein_g":   5.0, "fat_g":   7.8, "carb_g":  22.2, "sugar_g":  17.3, "fiber_g":   0.0, "sodium_mg":     70, "calcium_mg":    80},
+    "리치캔":                  {"protein_g":   1.0, "fat_g":   0.1, "carb_g":  16.4, "sugar_g":   0.0, "fiber_g":   0.9, "sodium_mg":      0, "calcium_mg":     2},
+    "후춧가루 강낭콩":             {"protein_g":  21.0, "fat_g":   1.4, "carb_g":  61.9, "sugar_g":   3.3, "fiber_g":  25.6, "sodium_mg":      1, "calcium_mg":    99},
+    "낫토":                   {"protein_g":  17.2, "fat_g":   8.5, "carb_g":   9.9, "sugar_g":   0.4, "fiber_g":   6.9, "sodium_mg":      7, "calcium_mg":   133},
+    "참마":                   {"protein_g":  17.7, "fat_g":   1.5, "carb_g":   0.3, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":    58},
+    "피칸":                   {"protein_g":   9.5, "fat_g":  74.3, "carb_g":  13.6, "sugar_g":   4.1, "fiber_g":   9.4, "sodium_mg":    383, "calcium_mg":    72},
+    "클로렐라가루":               {"protein_g":  45.3, "fat_g":   7.2, "carb_g":  25.7, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":   117},
+    "과메기":                  {"protein_g":  15.1, "fat_g":   5.3, "carb_g":   0.1, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     46, "calcium_mg":    26},
+    "멍게살 50":               {"protein_g":   8.7, "fat_g":   2.1, "carb_g":   4.9, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":   1300, "calcium_mg":    36},
+    "곰피":                   {"protein_g":  10.0, "fat_g":   1.4, "carb_g":  51.4, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":     0},
+    "민들레 15":               {"protein_g":   2.4, "fat_g":   0.4, "carb_g":   5.5, "sugar_g":   0.0, "fiber_g":   3.3, "sodium_mg":      1, "calcium_mg":   119},
+    "진달래꽃 2 5":             {"protein_g":   1.0, "fat_g":   0.1, "carb_g":   6.3, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":     17, "calcium_mg":    22},
+    "페이스트":                 {"protein_g":  16.5, "fat_g":   5.5, "carb_g":   2.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      0, "calcium_mg":   180},
+    "해선장":                  {"protein_g":   1.6, "fat_g":   3.3, "carb_g":  48.4, "sugar_g":  44.0, "fiber_g":   1.4, "sodium_mg":   2899, "calcium_mg":    22},
+    "코코넛슬라이스":              {"protein_g":   6.9, "fat_g":  64.5, "carb_g":  23.6, "sugar_g":   7.3, "fiber_g":  16.3, "sodium_mg":     37, "calcium_mg":    26},
+    "대두":                   {"protein_g":  38.5, "fat_g":  21.4, "carb_g":  30.8, "sugar_g":   7.5, "fiber_g":  22.1, "sodium_mg":      4, "calcium_mg":   236},
+    "도토리가루":                {"protein_g":   1.1, "fat_g":   1.1, "carb_g":  83.7, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      2, "calcium_mg":    60},
+    "말린오미자":                {"protein_g":   8.5, "fat_g":  12.4, "carb_g":  62.1, "sugar_g":   9.4, "fiber_g":  30.4, "sodium_mg":      2, "calcium_mg":    53},
+    "생수":                   {"protein_g":   0.0, "fat_g":   0.0, "carb_g":   0.0, "sugar_g":   0.0, "fiber_g":   0.0, "sodium_mg":      3, "calcium_mg":     1},
+    "코코아":                  {"protein_g":  22.9, "fat_g":  20.1, "carb_g":  43.6, "sugar_g":   0.5, "fiber_g":   0.0, "sodium_mg":     24, "calcium_mg":   161},
+    "흰강낭콩":                 {"protein_g":   8.8, "fat_g":   0.9, "carb_g":  32.4, "sugar_g":   1.6, "fiber_g":  14.1, "sodium_mg":      0, "calcium_mg":    49},
     "감자":     {"protein_g": 2.0,  "fat_g": 0.1,  "carb_g": 17.0, "sugar_g": 1.0, "fiber_g": 1.7, "sodium_mg": 5,   "calcium_mg": 8},
     "고구마":   {"protein_g": 1.4,  "fat_g": 0.2,  "carb_g": 28.0, "sugar_g": 4.7, "fiber_g": 2.5, "sodium_mg": 6,   "calcium_mg": 22},
     "양배추":   {"protein_g": 1.3,  "fat_g": 0.1,  "carb_g": 5.8,  "sugar_g": 3.2, "fiber_g": 2.3, "sodium_mg": 15,  "calcium_mg": 42},
@@ -201,6 +517,13 @@ def _save_cache() -> None:
 
 _AI_CACHE: Dict[str, Dict] = _load_cache()
 
+# [FIX] AI 추정에 실패한 재료명을 기억해 둔다.
+# 기존에는 실패를 기록하지 않아서, 검색할 때마다 '파인애플'·'케일'처럼
+# 똑같이 실패하는 재료를 몇 번이고 다시 물어봤다. 한도가 찬 상태에서는
+# 이 재시도가 오히려 한도를 더 태워서 다른 기능(쉽게보기 등)까지 죽였다.
+# 서버가 재시작되면 비워지므로(= 한도 회복 후 자동 재시도) 영구 포기는 아니다.
+_FAILED_KEYS: set = set()
+
 
 def _normalize_name(text: str) -> str:
     s = text or ""
@@ -263,7 +586,8 @@ def _scale(key: str, base: Dict, amount_g: float, source: str) -> Dict:
 # ─────────────────────────────────────────────────────────────
 async def estimate_nutrition_batch(raw_names: List[str]) -> Dict[str, Dict]:
     keys = sorted({_normalize_name(n) for n in raw_names if _normalize_name(n)})
-    keys = [k for k in keys if _lookup(k) is None]
+    # 이미 값이 있거나, 직전에 실패한 재료는 다시 묻지 않는다
+    keys = [k for k in keys if _lookup(k) is None and k not in _FAILED_KEYS]
     if not keys:
         return {}
 
@@ -291,8 +615,18 @@ async def estimate_nutrition_batch(raw_names: List[str]) -> Dict[str, Dict]:
             as_object=False,  # 최상위가 배열([...])이라 Groq의 json_object 강제는 끔
         )
 
+        # [FIX] response_mime_type="application/json"만 지정하면 모델이 최상위를
+        # 객체로 감싸서 {"result": [...]} 형태로 돌려주는 경우가 있다.
+        # 그럴 때 통째로 버리지 말고 안에 든 배열을 꺼내 쓴다.
+        if isinstance(data, dict):
+            for v in data.values():
+                if isinstance(v, list):
+                    data = v
+                    break
+
         if not isinstance(data, list):
             print(f"[nutrition_service] AI 응답이 배열이 아님({provider}), 원본: {str(data)[:300]}")
+            _FAILED_KEYS.update(keys)
             return {}
 
         if len(data) != len(keys):
@@ -308,17 +642,30 @@ async def estimate_nutrition_batch(raw_names: List[str]) -> Dict[str, Dict]:
 
         if filled:
             _save_cache()
+        # 이번에 값을 못 받은 키는 실패로 기록해 반복 호출을 막는다
+        _FAILED_KEYS.update(k for k in keys if k not in filled)
         print(f"[nutrition_service] AI 영양성분 배치 완료({provider}): {len(filled)}/{len(keys)}건 성공")
         return filled
 
     except Exception as e:
-        import traceback
-        print(f"[nutrition_service] AI 영양성분 배치 오류 ({type(e).__name__}): {e}")
-        traceback.print_exc()
+        # [FIX] traceback 전체 출력은 429가 수십 번 날 때 로그를 덮어버려
+        # 정작 봐야 할 줄을 못 찾게 만든다. 한 줄 요약만 남긴다.
+        _FAILED_KEYS.update(keys)
+        print(f"[nutrition_service] AI 영양성분 배치 오류 ({type(e).__name__}): {str(e)[:200]}")
         return {}
 
 
-async def get_nutrition_for_ingredient(standard_nm: str, amount_g: float) -> Dict:
+async def get_nutrition_for_ingredient(standard_nm: str, amount_g: float,
+                                       allow_ai: bool = True) -> Dict:
+    """allow_ai=False면 로컬표·캐시에만 의존하고 AI는 절대 호출하지 않는다.
+
+    [FIX] 추천 목록(/recommend)은 레시피 50개 × 재료 수만큼 이 함수를 부른다.
+    그런데 추천 점수에 쓰이는 열량·단백질·나트륨은 식약처가 레시피 단위로
+    직접 주는 값(INFO_ENG 등)이라, 재료별 AI 추정이 점수에 전혀 반영되지 않는다.
+    즉 쓰이지도 않는 값을 위해 AI 호출을 40번 넘게 소모하고, 그 때문에 정작
+    필요한 '쉽게 보기'·조리시간 분석이 할당량 부족으로 실패했다.
+    목록 단계에서는 allow_ai=False로 호출해 할당량을 상세 화면에 남겨둔다.
+    """
     if not standard_nm or amount_g <= 0:
         return _empty()
 
@@ -327,6 +674,9 @@ async def get_nutrition_for_ingredient(standard_nm: str, amount_g: float) -> Dic
 
     if base is not None:
         return _scale(key, base, amount_g, "nutrition_local" if key in LOCAL_NUTRITION_100G else "nutrition_ai")
+
+    if not allow_ai:
+        return _empty()
 
     # [안전장치] recipe_service.py 의 배치 사전조회를 거치지 않은 경우를 대비
     await estimate_nutrition_batch([key])

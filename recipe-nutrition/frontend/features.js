@@ -160,6 +160,12 @@ const TimeSlot = (() => {
 // ────────────────────────────────────────────────────────────
 const Fridge = (() => {
   const LS_KEY = 'fridge_ingredients';
+  // 백엔드 recommend_service.PANTRY_STAPLES 와 맞춰둔 목록
+  const PANTRY_STAPLES = new Set([
+    '소금','설탕','간장','식초','고추장','된장','쌈장','참기름','들기름',
+    '식용유','올리브유','후추','후춧가루','고춧가루','물','맛술','청주',
+    '마늘','대파','생강','깨','참깨','물엿','올리고당','전분','녹말가루',
+  ]);
   let items = [];
 
   function load() { items = ls(LS_KEY) || []; }
@@ -189,10 +195,14 @@ const Fridge = (() => {
     panel.id = 'fridge-panel';
     panel.style.cssText = 'border:2px solid #e8f4f8;border-radius:12px;padding:14px 16px;margin:12px 0;background:#f7fbff';
     panel.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <span style="font-size:20px">🧊</span>
         <strong style="color:#2c7be5">냉장고 재료 기반 추천</strong>
       </div>
+      <p style="margin:0 0 10px;font-size:12px;color:#6b7280;line-height:1.5">
+        소금·간장·마늘 같은 <b>양념은 집에 있다고 가정</b>하니 넣지 않아도 됩니다.
+        두부·계란·돼지고기처럼 <b>메인 재료만</b> 입력해 주세요.
+      </p>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <input id="fridge-input" placeholder="메인 재료명 입력 (예: 두부, 계란, 감자)"
           style="flex:1;padding:7px 12px;border:1px solid #cce0f5;border-radius:8px;font-size:14px"/>
@@ -200,17 +210,34 @@ const Fridge = (() => {
           style="padding:7px 14px;background:#2c7be5;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">추가</button>
       </div>
       <div id="fridge-tags"></div>
-      <label style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:13px;color:#555;cursor:pointer">
-        <input type="checkbox" id="fridge-only-check" style="width:15px;height:15px">
-        냉장고 재료가 있는 레시피만 보기
-      </label>`;
+      <div id="fridge-mode" style="margin-top:10px;display:flex;flex-direction:column;gap:5px;font-size:13px;color:#555">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="radio" name="fridge-mode" value="boost" checked>
+          내 재료가 들어간 레시피를 <b style="margin:0 3px">위로</b> (전체 표시)
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="radio" name="fridge-mode" value="any">
+          내 재료가 <b style="margin:0 3px">하나라도</b> 쓰이는 레시피만
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="radio" name="fridge-mode" value="mostly">
+          내 재료만으로 <b style="margin:0 3px">거의 다 만들 수 있는</b> 레시피만
+        </label>
+      </div>`;
     const searchBox = document.querySelector('.search-box') || document.querySelector('form');
     if (searchBox) searchBox.parentNode.insertBefore(panel, searchBox.nextSibling);
     else document.body.appendChild(panel);
     renderTags();
     document.getElementById('fridge-add-btn').addEventListener('click', () => {
-      const val = document.getElementById('fridge-input').value.trim();
-      if (val) { add(val); document.getElementById('fridge-input').value = ''; renderTags(); }
+      const input = document.getElementById('fridge-input');
+      const val = input.value.trim();
+      if (!val) return;
+      if (PANTRY_STAPLES.has(val)) {
+        showToast(`'${val}' 같은 양념은 이미 있다고 가정해요 🙂`);
+        input.value = '';
+        return;
+      }
+      add(val); input.value = ''; renderTags();
     });
     document.getElementById('fridge-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') { document.getElementById('fridge-add-btn').click(); e.preventDefault(); }
@@ -219,170 +246,76 @@ const Fridge = (() => {
 
   window._fridgeRemove = (ingredient) => { remove(ingredient); renderTags(); };
   function getItems() { return [...items]; }
-  function isFridgeOnly() { return document.getElementById('fridge-only-check')?.checked || false; }
+  function getMode() {
+    const el = document.querySelector('input[name="fridge-mode"]:checked');
+    return el ? el.value : 'boost';
+  }
   function init() { load(); renderPanel(); }
-  return { init, getItems, isFridgeOnly };
+  return { init, getItems, getMode };
 })();
 
 // ────────────────────────────────────────────────────────────
-// 4. 별점 + 5. 즐겨찾기 — 카드 자동 주입
+// 4. 별점 + 5. 즐겨찾기 — 저장소
+//
+// [FIX] 예전에는 이 모듈이 MutationObserver로 DOM을 훑어 카드에 버튼을
+// "나중에 끼워 넣는" 방식이었다. 그 탓에 세 가지 문제가 있었다:
+//   (1) card.querySelector('img')가 없으면 그냥 포기 → 이미지가 없는
+//       레시피는 즐겨찾기/별점 버튼이 아예 생기지 않음
+//   (2) 이미지 로드 실패 시 onerror가 <img>를 <div>로 바꿔버려,
+//       300ms 뒤 스캔 시점에는 버튼이 또 안 생김 (실행마다 결과가 달라짐)
+//   (3) 버튼이 어느 카드 것인지 DOM으로 추측 → 옆 레시피가 저장되는 사고
+// 이제 버튼은 render.js가 카드를 만들 때 함께 그리고(레시피 id를 클로저로
+// 직접 보유), 이 모듈은 저장/조회 로직만 제공한다.
 // ────────────────────────────────────────────────────────────
-const RecipeActions = (() => {
-  const DONE_ATTR = 'data-rf-done';
+const RecipeStore = (() => {
+
+  // [FIX] 별점·즐겨찾기가 서버에서 모든 사용자 공용으로 저장되고 있었다.
+  // index.html이 발급한 user_id를 함께 보내 사용자별로 분리한다.
+  // (localStorage 키는 index.html의 UID_KEY와 같은 값을 써야 한다)
+  function uid() {
+    try { return localStorage.getItem('recipeUserId_v1') || ''; }
+    catch { return ''; }
+  }
 
   function saveRating(id, name, score) {
     const all = ls('rec_ratings') || {};
     if (score === 0) delete all[id];
     else all[id] = { name, score, rated_at: new Date().toISOString() };
     ls('rec_ratings', all);
-    API.post('/api/user/ratings', { recipe_id: id, recipe_name: name, score }).catch(() => {});
+    API.post('/api/user/ratings',
+             { recipe_id: id, recipe_name: name, score, user_id: uid() }).catch(() => {});
   }
+
   function getRating(id) { return (ls('rec_ratings') || {})[id]?.score || 0; }
 
   function toggleFavorite(id, name, imageUrl) {
     const all = ls('rec_favorites') || {};
     if (all[id]) {
       delete all[id]; ls('rec_favorites', all);
-      API.del(`/api/user/favorites/${encodeURIComponent(id)}`).catch(() => {});
+      API.del(`/api/user/favorites/${encodeURIComponent(id)}?user_id=${encodeURIComponent(uid())}`)
+         .catch(() => {});
+      window.Favorites?.refresh();
       return false;
     }
     all[id] = { id, name, image_url: imageUrl || '', added_at: new Date().toISOString() };
     ls('rec_favorites', all);
-    API.post('/api/user/favorites', { recipe_id: id, name, image_url: imageUrl || '' }).catch(() => {});
+    API.post('/api/user/favorites',
+             { recipe_id: id, name, image_url: imageUrl || '', user_id: uid() }).catch(() => {});
+    window.Favorites?.refresh();
     return true;
   }
+
   function isFavorite(id) { return !!(ls('rec_favorites') || {})[id]; }
   function getAllFavorites() { return Object.values(ls('rec_favorites') || {}); }
 
-  function extractName(card) {
-    const selectors = ['h2','h3','h4','h5','strong',
-      '.recipe-name','.title',
-      '[class*="name"]','[class*="title"]','[class*="recipe"]'];
-    for (const sel of selectors) {
-      const el = card.querySelector(sel);
-      if (el) {
-        const txt = el.textContent.trim();
-        if (txt.length >= 2 && txt.length <= 40) return txt;
-      }
-    }
-    const leaves = card.querySelectorAll('p,div,span,a,li');
-    for (const el of leaves) {
-      if (el.children.length > 0) continue;
-      const txt = el.textContent.trim();
-      if (txt.length >= 2 && txt.length <= 30) return txt;
-    }
-    const img = card.querySelector('img');
-    if (img?.alt && img.alt.length >= 2) return img.alt;
-    const firstLine = card.textContent.trim().split('\n')
-      .map(s => s.trim()).find(s => s.length >= 2 && s.length <= 40);
-    return firstLine || '레시피';
-  }
-
-  function injectActions(card) {
-    if (!card || card.nodeType !== 1) return;
-    if (card.hasAttribute(DONE_ATTR)) return;
-    if (card.querySelector('.rf-actions')) return;
-
-    const img = card.querySelector('img');
-    if (!img) return;
-
-    const recipeName = card.dataset.recipeName || extractName(card);
-    const recipeId = (
-      card.dataset.recipeId || card.dataset.id ||
-      card.getAttribute('data-recipe-id') || card.getAttribute('data-id') ||
-      recipeName
-    );
-    const imageUrl = img.src || '';
-
-    card.setAttribute(DONE_ATTR, '1');
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'rf-actions';
-    wrapper.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #eee;flex-wrap:wrap';
-
-    // ── 별점 ──
-    const starWrap = document.createElement('div');
-    starWrap.style.cssText = 'display:flex;gap:2px;align-items:center';
-    const starLabel = document.createElement('span');
-    starLabel.textContent = '평가:';
-    starLabel.style.cssText = 'font-size:12px;color:#888;margin-right:2px';
-    starWrap.appendChild(starLabel);
-
-    const curRating = getRating(recipeId);
-    for (let s = 1; s <= 5; s++) {
-      const star = document.createElement('span');
-      star.textContent = s <= curRating ? '★' : '☆';
-      star.className = 'rf-star';
-      star.style.cssText = `font-size:22px;cursor:pointer;color:${s <= curRating ? '#f59e0b' : '#ccc'};transition:color 0.1s;line-height:1`;
-      star.addEventListener('mouseenter', () => {
-        starWrap.querySelectorAll('.rf-star').forEach((st, i) => {
-          st.textContent = i < s ? '★' : '☆';
-          st.style.color = i < s ? '#f59e0b' : '#ccc';
-        });
-      });
-      star.addEventListener('mouseleave', () => {
-        const cur = getRating(recipeId);
-        starWrap.querySelectorAll('.rf-star').forEach((st, i) => {
-          st.textContent = i < cur ? '★' : '☆';
-          st.style.color = i < cur ? '#f59e0b' : '#ccc';
-        });
-      });
-      star.addEventListener('click', () => {
-        const prev = getRating(recipeId);
-        const newScore = prev === s ? 0 : s;
-        saveRating(recipeId, recipeName, newScore);
-        showToast(newScore ? `⭐ ${newScore}점 저장됐어요` : '별점이 취소됐어요');
-        starWrap.querySelectorAll('.rf-star').forEach((st, i) => {
-          st.textContent = i < newScore ? '★' : '☆';
-          st.style.color = i < newScore ? '#f59e0b' : '#ccc';
-        });
-      });
-      starWrap.appendChild(star);
-    }
-    wrapper.appendChild(starWrap);
-
-    // ── 즐겨찾기 ──
-    const favBtn = document.createElement('button');
-    const faved = isFavorite(recipeId);
-    favBtn.innerHTML = faved ? '❤️ 즐겨찾기됨' : '🤍 즐겨찾기';
-    favBtn.style.cssText = `background:${faved?'#fee2e2':'none'};border:1px solid ${faved?'#fca5a5':'#ddd'};border-radius:8px;cursor:pointer;font-size:13px;padding:4px 10px;color:${faved?'#dc2626':'#555'};transition:all 0.2s`;
-    favBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const added = toggleFavorite(recipeId, recipeName, imageUrl);
-      favBtn.innerHTML = added ? '❤️ 즐겨찾기됨' : '🤍 즐겨찾기';
-      favBtn.style.background = added ? '#fee2e2' : 'none';
-      favBtn.style.borderColor = added ? '#fca5a5' : '#ddd';
-      favBtn.style.color = added ? '#dc2626' : '#555';
-      favBtn.style.transform = 'scale(1.1)';
-      setTimeout(() => favBtn.style.transform = '', 200);
-      showToast(added ? '❤️ 즐겨찾기에 추가했어요' : '즐겨찾기에서 제거했어요');
-      window.Favorites?.refresh();
-    });
-    wrapper.appendChild(favBtn);
-    card.appendChild(wrapper);
-  }
-
-  // ★★★ 핵심 버그 수정: .recipe-card를 직접 찾아서 각각에 injectActions ★★★
-  function scanCards() {
-    const area = document.getElementById('recipeListArea');
-    if (!area) return;
-    area.querySelectorAll('.recipe-card').forEach(card => injectActions(card));
-  }
-
-  window.featuresScanCards = scanCards;
-
-  function watchCards() {
-    scanCards();
-    let timer = null;
-    new MutationObserver(() => {
-      clearTimeout(timer);
-      timer = setTimeout(scanCards, 300);
-    }).observe(document.body, { childList: true, subtree: true });
-  }
-
-  function init() { watchCards(); }
-  return { init, getAllFavorites, isFavorite };
+  return { saveRating, getRating, toggleFavorite, isFavorite, getAllFavorites, uid };
 })();
+
+// render.js(ES 모듈)에서 쓸 수 있도록 전역으로 노출
+window.RecipeStore = RecipeStore;
+
+// 기존 코드 호환용 별칭 (즐겨찾기 모달이 참조)
+const RecipeActions = RecipeStore;
 
 // ────────────────────────────────────────────────────────────
 // 5-B. 즐겨찾기 모달 + 우하단 버튼
@@ -460,9 +393,14 @@ const Favorites = (() => {
   }
 
   window._favRemove = (id, name) => {
+    const key = id || name;
     const all = ls('rec_favorites') || {};
-    delete all[id || name]; ls('rec_favorites', all);
-    fetch(`/api/user/favorites/${encodeURIComponent(id || name)}`, { method:'DELETE' }).catch(() => {});
+    delete all[key]; ls('rec_favorites', all);
+    const u = window.RecipeStore?.uid?.() || '';
+    fetch(`/api/user/favorites/${encodeURIComponent(key)}?user_id=${encodeURIComponent(u)}`,
+          { method:'DELETE' }).catch(() => {});
+    // [FIX] 목록 카드와 상세 패널의 ❤️ 표시도 함께 되돌린다
+    window._syncFavUI?.(key, false);
     refresh();
   };
 
@@ -507,7 +445,7 @@ window.buildExtraParams = function() {
   const fridgeItems = Fridge.getItems();
   if (fridgeItems.length) {
     params.set('fridge', fridgeItems.join(','));
-    if (Fridge.isFridgeOnly()) params.set('fridge_only', 'true');
+    params.set('fridge_mode', Fridge.getMode());
   }
   return params.toString();
 };
@@ -519,7 +457,6 @@ document.addEventListener('DOMContentLoaded', () => {
   Settings.init();
   TimeSlot.init();
   Fridge.init();
-  RecipeActions.init();
   Favorites.init();
-  console.log('[features.js] 6가지 편의기능 로드 완료 ✅');
+  console.log('[features.js] 편의기능 로드 완료 ✅ (별점·즐겨찾기 버튼은 render.js가 렌더)');
 });

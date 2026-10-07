@@ -15,14 +15,26 @@ except Exception as e:
     export = None
     print(f"[main] export router import skipped: {e}")
 
+import os
+
+from config import get_settings
+
+_settings = get_settings()
+
 app = FastAPI(title="Recipe Analysis System")
 
+# [FIX] 예전에는 CORS 허용 출처가 ["*"]로 하드코딩돼 있어 config.allowed_origins
+# 설정이 죽어 있었다. .env의 ALLOWED_ORIGINS를 실제로 반영한다.
+#   ALLOWED_ORIGINS=*                         → 전체 허용 (개발용 기본값)
+#   ALLOWED_ORIGINS=https://a.com,https://b.com → 지정한 출처만 허용
+_origins = [o.strip() for o in (_settings.allowed_origins or "*").split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+print(f"[main] CORS 허용 출처: {_origins}")
 
 
 @app.middleware("http")
@@ -73,4 +85,8 @@ else:
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8888, reload=True)
+    # [FIX] 포트가 8888로 하드코딩돼 있어 .env의 PORT 설정이 무시됐고,
+    # 로컬(8888)과 배포(railway.toml의 $PORT) 동작이 달라 혼란의 원인이었다.
+    _port = int(os.getenv("PORT") or _settings.port or 8888)
+    print(f"[main] http://localhost:{_port} 에서 실행합니다")
+    uvicorn.run("main:app", host="0.0.0.0", port=_port, reload=True)

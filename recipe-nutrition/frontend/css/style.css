@@ -1468,3 +1468,174 @@ body {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+/* ── 조리 단계 사진 (식약처 MANUAL_IMG01~20) ───────────────── */
+.step-list li .step-img,
+.easy-step-body .step-img {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  border-radius: 10px;
+  margin: 6px 0 8px;
+  background: var(--bg);
+  object-fit: cover;
+}
+.step-list li .step-text { display: block; }
+
+/* ── 별점 · 즐겨찾기 액션 영역 ──────────────────────────────
+   [FIX] 카드가 그리드에서 늘어날 때 액션 줄이 카드 중간에 뜨고
+   카드마다 세로 위치가 달라서 옆 카드 버튼을 누르기 쉬웠다.
+   카드를 세로 flex로 만들고 본문에 flex:1을 줘서 액션 줄이
+   항상 카드 맨 아래에 붙도록 고정한다. */
+.recipe-card {
+  display: flex;
+  flex-direction: column;
+}
+.recipe-card .card-body { flex: 1 1 auto; }
+/* flex 컨테이너가 되면서 이미지가 세로로 눌릴 수 있어 축소를 막는다 */
+.recipe-card .card-img,
+.recipe-card .card-img-placeholder { flex: 0 0 auto; }
+
+.rf-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding: 8px 14px 10px;
+  border-top: 1px solid var(--border);
+}
+.rf-label { font-size: 12px; color: var(--muted); }
+.rf-stars { display: inline-flex; gap: 2px; }
+.rf-star {
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: #ccc;
+  transition: color 0.1s;
+  user-select: none;
+}
+.rf-stars-lg .rf-star { font-size: 26px; }
+.rf-star.on { color: #f59e0b; }
+
+.rf-fav {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.rf-fav:hover { border-color: #fca5a5; }
+.rf-fav.on { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+
+.easy-step-fallback {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #92400e;
+  background: #fffbea;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  padding: 5px 9px;
+}
+
+/* 사용량 옆 g 환산 — 보조 정보라 작고 흐리게 */
+.ing-table .amt-g { font-size: 0.78em; color: var(--muted); margin-left: 2px; }
+
+/* 재료 섹션 머리글 ([재료] / [양념] 구분) */
+.ing-table tr.ing-section td {
+  background: var(--bg);
+  font-weight: 600;
+  font-size: 0.85em;
+  color: var(--muted);
+  padding-top: 10px;
+}
+
+/* ── 영양 정보 머리글 + 1일 기준치 비율 ───────────────────── */
+.nutri-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 14px 0 6px;
+  /* 아래 카드(.nutri-card)의 좌우 padding과 맞춰 왼쪽 선을 정렬한다 */
+  padding: 0 1.25rem;
+}
+.nutri-head-title { font-weight: 600; font-size: 0.95rem; }
+.nutri-head-sub   { font-size: 0.72rem; color: var(--muted); }
+
+.nutri-pct {
+  margin-top: 3px;
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: -0.02em;
+}
+.nutri-pct-warn { color: var(--red); font-weight: 600; }
+
+/* 재료 목록 — 인분 표시 (우리의식탁의 '2~3인분'과 같은 위치) */
+.section-label .ing-servings {
+  margin-left: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* ── 상세 헤더 우측: 별점 + 즐겨찾기 ───────────────────────── */
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: var(--amber-light, #fffbf0);
+  border: 1px solid var(--amber, #fde68a);
+  border-radius: var(--radius, 10px);
+}
+.detail-actions-rate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.detail-actions-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+.detail-actions .rf-stars { display: flex; gap: 3px; }
+.detail-actions #detail-rating-label {
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 0;
+}
+.detail-actions .rf-fav { margin-left: 0; }
+
+/* 레시피명과 같은 줄, 헤더 오른쪽 끝에 정렬.
+   .detail-header 의 좌우 padding(1.5rem)이 그대로 오른쪽 여백이 되어
+   '레시피명 왼쪽 여백 = 버튼 오른쪽 여백'으로 맞는다. */
+.detail-header {
+  align-items: center;      /* 제목 줄과 세로 중앙 정렬 */
+}
+.detail-header > div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;              /* space-between 환경에서도 가로를 꽉 채우도록 */
+}
+
+.detail-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.detail-title-row .detail-title { margin: 0; }
+/* 제목과 버튼 사이를 벌려 버튼을 오른쪽 끝으로 */
+.detail-title-row .detail-actions { margin-left: auto; }
+
+/* 화면이 좁으면 제목 아래로 자연스럽게 떨어지도록 */
+@media (max-width: 720px) {
+  .detail-actions { width: 100%; justify-content: space-between; }
+}

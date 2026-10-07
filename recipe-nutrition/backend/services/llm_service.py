@@ -70,24 +70,31 @@ _TIMEOUT_SEC = 20
 # 있었음. 동시에 나갈 수 있는 Groq 요청 수를 제한해서 몰림을 완화.
 _GROQ_CONCURRENCY = asyncio.Semaphore(3)
 
+# [FIX] Gemini도 동시 호출 수를 제한한다.
+# 기존에는 /recommend 한 번에 수십 개의 Gemini 요청이 한꺼번에 나가면서
+# 분당 요청 한도(RPM)를 즉시 초과 → 429 → 전부 Groq로 밀려 Groq TPM까지
+# 터지는 연쇄 실패가 있었음. 동시 실행 수를 묶어두면 429 자체가 크게 준다.
+_GEMINI_CONCURRENCY = asyncio.Semaphore(4)
+
 
 def _clean_json_text(text: str) -> str:
     return (text or "").strip().replace("```json", "").replace("```", "").strip()
 
 
 async def _call_gemini(prompt: str, temperature: float, max_tokens: int) -> Any:
-    response = await asyncio.wait_for(
-        _gemini_client.aio.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=temperature,
-                max_output_tokens=max_tokens,
-                response_mime_type="application/json",
+    async with _GEMINI_CONCURRENCY:
+        response = await asyncio.wait_for(
+            _gemini_client.aio.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=temperature,
+                    max_output_tokens=max_tokens,
+                    response_mime_type="application/json",
+                ),
             ),
-        ),
-        timeout=_TIMEOUT_SEC,
-    )
+            timeout=_TIMEOUT_SEC,
+        )
     return json.loads(_clean_json_text(response.text))
 
 

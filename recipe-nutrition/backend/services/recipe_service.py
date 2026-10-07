@@ -37,8 +37,7 @@ RECIPE_CACHE: Dict[str, Dict] = {}
 # 개 단위 → g 환산 (확장)
 # ─────────────────────────────────────────────────────────────
 PIECE_GRAMS = {
-    "오렌지": 200.0,    "당근": 200.0,      "양파": 180.0,      "감자": 180.0,
-    "사과": 250.0,      "토마토": 150.0,    "방울토마토": 12.0,
+    "오렌지": 200.0,    "당근": 200.0,      "양파": 180.0,
     "달걀": 50.0,       "계란": 50.0,       "마늘": 5.0,        "대파": 100.0,
     "두부": 300.0,      "순두부": 350.0,    "청양고추": 10.0,   "고추": 10.0,
     "양배추": 900.0,    "애호박": 250.0,    "오이": 200.0,      "무": 1000.0,
@@ -47,6 +46,7 @@ PIECE_GRAMS = {
     "양배추잎": 50.0,   "배춧잎": 50.0,     "상추잎": 5.0,      "깻잎": 2.0,
     "버섯": 50.0,       "표고버섯": 30.0,   "팽이버섯": 150.0,  "새송이버섯": 100.0,
     "느타리버섯": 100.0, "양송이버섯": 20.0,
+    "토마토": 150.0,    "방울토마토": 12.0,
     "사과": 250.0,      "배": 500.0,        "딸기": 15.0,       "귤": 100.0,
     "레몬": 100.0,      "자두": 60.0,       "복숭아": 200.0,
     "메추리알": 10.0,   "새우": 15.0,       "바지락": 10.0,     "꼬막": 15.0,
@@ -89,7 +89,7 @@ COMPOUND_MAP = {
     "고추냉이": "고추냉이", "고추기름": "고추기름",  "고춧가루": "고춧가루",
     "청양고추": "청양고추", "홍고추": "고추",         "풋고추": "고추",
     # 토마토류
-    "방울토마토": "방울토마토", "토마토케첩": "케첩", "토마토소스": "토마토소스",
+    "방울토마토": "방울토마토", "토마토케첩": "케첩", # 파류
     # 파류
     "대파": "대파",         "쪽파": "쪽파",          "파채": "대파",
     "실파": "쪽파",         "움파": "대파",
@@ -102,7 +102,6 @@ COMPOUND_MAP = {
     # 기름류
     "올리브유": "올리브유", "올리브오일": "올리브유",
     "참기름": "참기름",     "들기름": "들기름",       "식용유": "식용유",
-    "포도씨유": "식용유",   "카놀라유": "식용유",     "현미유": "식용유",
     # 식초류
     "발사믹식초": "발사믹식초", "사과식초": "식초",   "현미식초": "식초",
     "양조식초": "식초",     "포도식초": "식초",
@@ -141,7 +140,6 @@ COMPOUND_MAP = {
     "튀김기름": "식용유",   "포도씨유": "식용유",      "카놀라유": "식용유",
     "현미유": "식용유",     "해바라기유": "식용유",
     # 채소 복합명 (수식어 제거)
-    "가정 간편식 재료 배추": "배추", "간편식 재료 배추": "배추",
     "어린잎채소": "어린잎채소", "베이비채소": "어린잎채소",
     # 소스류
     "소스 칠리소스": "칠리소스",   "칠리소스": "칠리소스",
@@ -175,7 +173,6 @@ COMPOUND_MAP = {
     "통삼겹": "삼겹살",     "통삼겹살": "삼겹살",
     # 복합 재료명 (요리명+재료명 패턴)
     "청국장리조뜨 밥": "즉석밥", "리조또 밥": "즉석밥", "볶음밥 밥": "즉석밥",
-    "밥": "즉석밥",
     "가정 간편식 재료 배추": "배추", "간편식 재료 배추": "배추",
     "가정간편식재료배추": "배추",
     # 해조류면
@@ -187,23 +184,22 @@ COMPOUND_MAP = {
 # ─────────────────────────────────────────────────────────────
 # 일반 재료 aliases (길이 내림차순 — 긴 단어 먼저 매칭)
 # ─────────────────────────────────────────────────────────────
+# [FIX] COMPOUND_MAP을 길이 내림차순으로 정렬해 둔다.
+# dict 삽입 순서대로 매칭하면 짧은 키가 먼저 걸려 오매핑이 생긴다.
+_COMPOUND_SORTED = sorted(COMPOUND_MAP.items(), key=lambda kv: -len(kv[0]))
+
 _ALIASES = sorted([
     "방울토마토", "토마토", "오렌지즙", "오렌지", "양배추", "당근", "양파", "감자",
-    "사과", "두부", "순두부", "계란", "달걀", "대파", "마늘", "청양고추", "고추",
-    "돼지고기", "소고기", "닭고기", "닭가슴살", "삼겹살",
-    "부침가루", "식용유", "참기름", "간장", "된장", "고추장", "쌈장",
-    "김치", "애호박", "오이", "무", "버섯", "표고버섯", "팽이버섯",
-    "새송이버섯", "느타리버섯", "파프리카", "피망", "생강", "쪽파",
-    "브로콜리", "시금치", "부추", "미나리", "깻잎", "상추", "쑥갓",
-    "고춧가루", "설탕", "물엿", "참깨", "깨", "검은깨",
-    "두유", "우유", "생크림", "버터", "달걀", "계란",
-    "새우", "오징어", "멸치", "황태", "황태채", "북어채",
-    "쌀", "밀가루", "소면", "당면",
-    "된장", "고추장", "간장", "식초", "참기름",
-    "올리브유", "마요네즈", "케첩", "머스터드",
-    "감자", "고구마", "연근", "도라지",
-    "김치", "두부", "어묵", "맛살",
-    "잣", "호두", "아몬드", "땅콩",
+    "사과", "두부", "순두부", "계란", "달걀", "대파", "마늘", "청양고추",
+    "고추", "돼지고기", "소고기", "닭고기", "닭가슴살", "삼겹살", "부침가루", "식용유",
+    "참기름", "간장", "된장", "고추장", "쌈장", "김치", "애호박", "오이",
+    "무", "버섯", "표고버섯", "팽이버섯", "새송이버섯", "느타리버섯", "파프리카", "피망",
+    "생강", "쪽파", "브로콜리", "시금치", "부추", "미나리", "깻잎", "상추",
+    "쑥갓", "고춧가루", "설탕", "물엿", "참깨", "깨", "검은깨", "두유",
+    "우유", "생크림", "버터", "새우", "오징어", "멸치", "황태", "황태채",
+    "북어채", "쌀", "밀가루", "소면", "당면", "식초", "올리브유", "마요네즈",
+    "케첩", "머스터드", "고구마", "연근", "도라지", "어묵", "맛살", "잣",
+    "호두", "아몬드", "땅콩",
 ], key=len, reverse=True)  # 길이 내림차순
 
 
@@ -232,8 +228,9 @@ def _normalize_ingredient_name(name: str) -> str:
     s = (name or "").strip()
 
     # 1) 복합명 딕셔너리 우선 체크
-    # 정확히 일치하거나, 재료명이 COMPOUND_MAP 키를 포함하는지 확인
-    for compound, mapped in COMPOUND_MAP.items():
+    # [FIX] 예전에는 dict 삽입 순서대로 돌아서, 짧은 키가 긴 키보다 먼저
+    # 걸리면 엉뚱한 재료로 매핑됐다. 긴 키부터 검사한다(_ALIASES와 동일 방식).
+    for compound, mapped in _COMPOUND_SORTED:
         if compound == s or s.startswith(compound) or s.endswith(compound):
             return mapped
         # 공백 포함 패턴 (예: "무염 버터")
@@ -353,17 +350,305 @@ _SINGLE_CHAR_INGREDIENTS = {
     "굴", "무", "파", "배", "콩", "김", "잣", "깨", "엿", "술", "쑥", "게",
     # 곡물/전분 (신규)
     "쌀", "밥", "떡", "팥", "밤",
+    # [FIX] COMPOUND_MAP이 "스팸"·"통조림 햄"을 "햄"으로 정규화하는데,
+    # "햄"이 이 목록에 없어 _is_valid_ingredient_name()에서 걸러져
+    # 재료 자체가 통째로 사라지고 있었다. 부대찌개 계열 레시피에서
+    # 햄이 영양·가격 계산에 전혀 반영되지 않던 원인.
+    "햄",
     # 기타 (신규)
     "꿀", "마", "감", "차",
+    # [FIX] '물'이 1글자라 재료 목록에서 통째로 빠지고 있었다.
+    # 국물요리는 물이 300~500ml를 차지하는데도 재료합에 안 잡혀
+    # 인분 수 역산이 크게 어긋났다(표고버섯 청경채국 재료합 72g ← 실제 372g).
+    # 타 레시피 사이트도 '물 1L'를 재료로 표시한다.
+    # 가격은 FREE_INGREDIENTS로 0원, 영양도 0이므로 계산에는 영향이 없다.
+    "물",
 }
+
+
+# [FIX] 식약처 재료 문자열에는 실제 재료가 아닌 안내 문구가 섞여 있다.
+# 예) "2인분 기준", "재료", "소스", "육수 재료 물".
+# 이것들이 재료로 잡히면 (1) 화면에 이상한 재료명이 뜨고
+# (2) 영양·가격 조회 API를 쓸데없이 호출해 할당량을 태운다.
+_NON_INGREDIENT_EXACT = {
+    "기준", "재료", "주재료", "부재료", "소스", "양념", "고명",
+    "장식", "준비", "필수", "선택", "곁들임", "토핑",
+}
+
+
+# ─────────────────────────────────────────────────────────────
+# 사용량을 '조리 단위'로 되돌리기
+#
+# 식약처는 재료를 g으로만 적는 레시피가 많은데(주꾸미 40g, 마늘 3g),
+# 가정에서 요리할 때는 저울보다 '1마리', '2/3쪽'이 쓰기 쉽다.
+# 타 레시피 서비스도 조리 단위를 쓴다.
+#   우리의식탁 '두부 1모'  새미네부엌 '대파 1/5대'  이밥차 '마늘 3쪽'
+#
+# 다만 식약처는 1인분 표준 분량이라 양이 매우 작아(주꾸미김치찌개 총 137g)
+# 전부 환산하면 '김치 0.02포기', '두부 0.03모'처럼 쓸모없는 값이 된다.
+# 그래서 **분모 4 이하의 깔끔한 분수로 떨어질 때만** 조리 단위로 바꾸고,
+# 그렇지 않으면 g을 그대로 둔다.
+#
+# 환산 기준은 이미 쓰고 있는 PIECE_GRAMS / KOREAN_UNIT_GRAMS 그대로다.
+# (영양·가격 계산에 쓰는 값과 같아야 화면과 계산이 어긋나지 않는다)
+# ─────────────────────────────────────────────────────────────
+from fractions import Fraction
+
+# 재료 → (조리 단위, 1단위당 g). KOREAN_UNIT_GRAMS를 뒤집어 만든다.
+# [FIX] 만개의레시피 「계량법 안내」의 공개 눈대중표로 보정.
+# 우리 값이 실제 식재료 크기와 달랐던 것들이다.
+#   당근 200g → 150g,  대파 100g → 140g,  돼지고기 200g → 100g
+_EYE_MEASURE = {
+    "양파": 170.0, "당근": 150.0, "대파": 140.0, "마늘": 5.0, "생강": 5.0,
+}
+PIECE_GRAMS.update(_EYE_MEASURE)
+# 대파는 '뿌리'보다 '대'가 통용된다 (만개의레시피: 대파 1/2대 = 70g)
+KOREAN_UNIT_GRAMS.setdefault("대", {})["대파"] = 140.0
+KOREAN_UNIT_GRAMS["대"].setdefault("default", 140.0)
+KOREAN_UNIT_GRAMS.setdefault("톨", {})["마늘"] = 5.0
+KOREAN_UNIT_GRAMS["톨"]["생강"] = 5.0
+KOREAN_UNIT_GRAMS["톨"].setdefault("default", 5.0)
+KOREAN_UNIT_GRAMS["토막"]["돼지고기"] = 100.0
+KOREAN_UNIT_GRAMS["토막"]["소고기"] = 100.0
+KOREAN_UNIT_GRAMS["토막"].setdefault("생선", 85.0)
+KOREAN_UNIT_GRAMS["토막"]["무"] = 150.0
+
+_DISPLAY_UNIT: Dict[str, tuple] = {}
+for _unit, _table in KOREAN_UNIT_GRAMS.items():
+    for _nm, _g in _table.items():
+        if _nm != "default" and _nm not in _DISPLAY_UNIT:
+            _DISPLAY_UNIT[_nm] = (_unit, _g)
+# 개수로 세는 재료는 '개'
+for _nm, _g in PIECE_GRAMS.items():
+    _DISPLAY_UNIT.setdefault(_nm, ("개", _g))
+# 통용되는 단위로 덮어쓰기 (KOREAN_UNIT_GRAMS 순회 순서에 좌우되지 않도록)
+_DISPLAY_UNIT["대파"] = ("대", 140.0)
+_DISPLAY_UNIT["마늘"] = ("쪽", 5.0)
+_DISPLAY_UNIT["생강"] = ("톨", 5.0)
+_DISPLAY_UNIT["무"]   = ("토막", 150.0)
+# 가루·액체·양념류는 숟가락이 자연스럽다 (1작은술 = 5g, 1큰술 = 15g)
+# 캐시 1,146개 레시피에서 'g으로만 표시되던 재료'를 빈도순으로 뽑아 채웠다.
+for _nm in (
+    # 장·소스·액체
+    "간장", "국간장", "진간장", "저염간장", "참기름", "들기름", "식용유", "올리브유",
+    "포도씨유", "식초", "맛술", "청주", "된장", "고추장", "쌈장", "춘장",
+    "마요네즈", "케첩", "굴소스", "참치액", "액젓", "멸치액젓", "까나리액젓",
+    "새우젓", "레몬즙", "오렌지즙", "매실액", "요리당", "미림", "소주", "연두",
+    "유자청", "두유", "우유", "생크림", "요거트", "물엿", "올리고당", "꿀", "시럽",
+    # 가루류
+    "밀가루", "부침가루", "튀김가루", "전분", "녹말가루", "쌀가루", "빵가루",
+    "고춧가루", "후춧가루", "후추", "흰후추", "통후추", "카레가루", "강황가루",
+    "계피가루", "파슬리가루", "마늘가루", "양파가루", "베이킹파우더", "설탕", "소금",
+    # 다진 것·씨앗
+    "다진 마늘", "다진마늘", "다진 생강", "참깨", "검은깨", "들깨", "깨소금",
+    "버터", "치즈", "마가린",
+):
+    _DISPLAY_UNIT.setdefault(_nm, ("작은술", 5.0))
+
+# 한 줌(약 50g)이 자연스러운 나물·채소류
+for _nm in ("숙주", "콩나물", "시금치", "미나리", "쑥갓", "부추", "쪽파", "달래",
+            "취나물", "고사리", "어린잎채소", "새싹채소", "상추", "깻잎", "루꼴라"):
+    _DISPLAY_UNIT.setdefault(_nm, ("줌", 50.0))
+
+# 개수로 세는데 기존 표에 빠져 있던 재료 (영양·가격 계산에서도 0g이 되던 것들)
+_EXTRA_PIECE = {
+    "브로콜리": 250.0, "콜리플라워": 500.0, "파프리카": 150.0, "피망": 100.0,
+    "단호박": 800.0, "애호박": 250.0, "가지": 150.0, "오이": 200.0,
+    "닭가슴살": 100.0, "닭다리": 100.0,
+    "유부": 10.0, "슬라이스햄": 20.0, "소시지": 30.0, "베이컨": 15.0,
+    "새송이버섯": 50.0, "양송이버섯": 20.0, "팽이버섯": 150.0, "느타리버섯": 100.0,
+    "레몬": 100.0, "라임": 60.0, "아보카도": 200.0, "키위": 100.0, "바나나": 120.0,
+    "식빵": 35.0, "또띠아": 40.0, "김밥김": 2.0,
+}
+for _nm, _g in _EXTRA_PIECE.items():
+    PIECE_GRAMS.setdefault(_nm, _g)
+    _DISPLAY_UNIT.setdefault(_nm, ("개", _g))
+
+
+# 고기·견과·건어물 등은 '큰술/줌/장'보다 '쪽·토막·컵'이 자연스럽다
+# 고기는 1토막이 200g이라 식약처 1인분(30~50g)이면 '1/7토막'처럼 어색해진다.
+# 덩어리 단위가 의미 없는 재료이므로 그램을 그대로 쓴다.
+for _nm in ("아몬드", "호두", "땅콩", "잣", "캐슈넛", "피스타치오", "해바라기씨"):
+    _DISPLAY_UNIT.setdefault(_nm, ("줌", 20.0))
+for _nm in ("다시마", "김", "건미역", "미역"):
+    _DISPLAY_UNIT.setdefault(_nm, ("장", 5.0))
+for _nm in ("만두피", "라이스페이퍼", "춘권피", "식빵", "또띠아", "슬라이스치즈"):
+    _DISPLAY_UNIT.setdefault(_nm, ("장", 10.0))
+for _nm in ("즉석밥", "밥", "현미밥", "잡곡밥"):
+    _DISPLAY_UNIT.setdefault(_nm, ("공기", 210.0))
+for _nm in ("김치", "배추김치", "묵은지", "총각김치", "깍두기"):
+    _DISPLAY_UNIT.setdefault(_nm, ("줌", 50.0))
+for _nm in ("오징어", "주꾸미", "낙지", "문어"):
+    _DISPLAY_UNIT.setdefault(_nm, ("마리", 200.0))
+for _nm in ("대추", "곶감", "건포도", "크랜베리"):
+    _DISPLAY_UNIT.setdefault(_nm, ("개", 5.0))
+for _nm in ("바질", "파슬리", "로즈마리", "타임", "오레가노", "월계수잎", "고수"):
+    _DISPLAY_UNIT.setdefault(_nm, ("장", 0.5))
+
+
+# 부피로만 표기하는 재료 (무게·숟가락 단위가 어색한 것들)
+_VOLUME_ONLY = {"물", "생수", "정수", "찬물", "따뜻한물", "끓는물", "얼음물"}
+
+
+# [FIX] 단위마다 '쪼갤 수 있는 정도'가 다르다. 분모를 일률적으로 8까지
+# 허용했더니 '4/5줌', '3/5쪽'처럼 가늠이 안 되는 표기가 나왔다.
+#   계량스푼·컵  : 1/2·1/3·1/4 눈금이 실제로 있다       → 분모 4
+#   덩어리       : 두부 1/4모, 양파 1/2개처럼 썰면 된다  → 분모 4
+#   작은 낱개     : 마늘 2/3쪽 정도까지는 가늠이 된다      → 분모 3
+#   세는 것       : 2/3마리, 3/5장은 말이 안 된다         → 분모 2 (반까지)
+#   어림 단위     : '줌'은 손으로 집는 양이라 4/5가 무의미  → 분모 2
+_UNIT_MAX_DENOM = {
+    "큰술": 4, "작은술": 4, "스푼": 4, "컵": 4,
+    "모": 4, "개": 4, "포기": 4, "통": 4, "공기": 4,
+    "쪽": 3, "톨": 3, "알": 3,
+    "마리": 2, "장": 2, "줄기": 2, "가닥": 2, "송이": 2, "봉지": 2,
+    "캔": 2, "포": 2, "팩": 2, "토막": 2, "단": 2, "뿌리": 2, "대": 2, "조각": 2,
+    "줌": 2, "꼬집": 2, "방울": 2,
+}
+
+
+def _fmt_fraction(f: Fraction) -> str:
+    """Fraction → '2/3', '1', '1+1/2' 형태 문자열."""
+    if f.denominator == 1:
+        return str(f.numerator)
+    whole, rem = divmod(f.numerator, f.denominator)
+    frac = f"{rem}/{f.denominator}"
+    return f"{whole}+{frac}" if whole else frac
+
+
+def to_cooking_unit(standard_nm: str, amount_g: float) -> Optional[str]:
+    """g을 조리 단위로 환산. 깔끔하게 떨어지지 않으면 None.
+
+    '깔끔하다'의 기준:
+      · 분모가 4 이하 (1/4, 1/3, 1/2, 2/3, 3/4, 1, 1+1/2 …)
+      · 1/4 이상 (그보다 작으면 '0.1개'처럼 쓸모없는 값이 된다)
+      · 반올림 오차가 12% 이내 (3g을 '1쪽'이라 하면 안 되므로)
+    """
+    if not standard_nm or not amount_g or amount_g <= 0:
+        return None
+
+    # [FIX] 물은 무게가 아니라 부피로 쓴다.
+    # 식약처 원문이 '물 300ml(1½컵)'처럼 적혀 있어도 우리 화면에는
+    # '300g'이나 '1/3작은술'로 나오고 있었다. 물 1g = 1ml 이므로
+    # ml·L로 환산해 보여주고, 10ml 미만은 '약간'으로 쓴다.
+    if standard_nm in _VOLUME_ONLY:
+        if amount_g >= 1000:
+            liters = amount_g / 1000
+            return f"{liters:g}L"
+        if amount_g >= 10:
+            return f"{round(amount_g)}ml"
+        return "약간"
+
+    # 1g 미만은 어떤 단위로도 숫자가 의미 없다. 레시피에서도 '약간'으로 쓴다.
+    if amount_g < 1.0:
+        return "약간"
+    hit = _DISPLAY_UNIT.get(standard_nm)
+    if not hit:
+        return None
+    unit, per = hit
+    if per <= 0:
+        return None
+
+    q = amount_g / per
+
+    # 큰술로 올리면 더 자연스러운 경우 (간장 15g = 3작은술 → 1큰술)
+    if unit == "작은술" and q >= 3:
+        unit, per, q = "큰술", 15.0, amount_g / 15.0
+
+    # 단위별로 허용 분모를 달리한다 (위 _UNIT_MAX_DENOM 참고)
+    max_denom = _UNIT_MAX_DENOM.get(unit, 4)
+    f = Fraction(q).limit_denominator(max_denom)
+    if f < Fraction(1, max_denom):
+        return None
+    # [FIX] 오차를 비율로만 보면 소량 재료가 전부 걸러진다.
+    #   소금 2g ÷ 작은술 5g = 0.4 → 1/3작은술(1.67g), 비율 오차 17% → 거부
+    # 하지만 요리에서 소금 2g과 1/3작은술은 사실상 같은 양이다.
+    # 비율 오차 15% 이내이거나, 절대 오차가 1g 이하면 인정한다.
+    err_g = abs(float(f) - q) * per
+    if abs(float(f) - q) > q * 0.15 and err_g > 1.0:
+        return None
+    # 대분수(3+1/3마리)는 오히려 읽기 어렵다. 1 미만 분수이거나 정수일 때만 쓴다.
+    if f.denominator != 1 and f > 1:
+        return None
+    return f"{_fmt_fraction(f)}{unit}"
+
+
+def _servings_by_energy(row: Dict, ingredients: List[Dict]) -> Optional[float]:
+    """재료 열량 합 ÷ 1인분 열량(INFO_ENG)으로 인분 수를 구한다.
+
+    [FIX] INFO_WGT(1인분 중량)는 1,156건 중 285건(24.7%)에만 들어 있다.
+    반면 INFO_ENG(1인분 열량)는 거의 모든 레시피에 있고, 재료별 영양
+    커버리지도 95.3%라 이 방식이 훨씬 넓게 적용된다.
+
+    열량은 Atwater 계수로 계산한다 (탄수화물·단백질 4kcal/g, 지방 9kcal/g).
+    무게(INFO_WGT)와 달리 조리 중 수분 증발·첨가에 영향을 받지 않아
+    국물요리에서도 비교적 안정적이다.
+    """
+    info_eng = _n(row.get("INFO_ENG"))
+    if info_eng <= 0:
+        return None
+    total = 0.0
+    for ing in ingredients:
+        carb = float(ing.get("carb_g", 0.0) or 0.0)
+        prot = float(ing.get("protein_g", 0.0) or 0.0)
+        fat  = float(ing.get("fat_g", 0.0) or 0.0)
+        total += 4 * carb + 4 * prot + 9 * fat
+    if total <= 0:
+        return None
+    return total / info_eng
+
+
+def _servings_by_weight(row: Dict, ingredients: List[Dict]) -> Optional[float]:
+    """재료 총중량 ÷ 1인분 중량(INFO_WGT). 값이 있는 레시피에만 쓸 수 있다."""
+    serving_g = _n(row.get("INFO_WGT"))
+    total_g = sum(float(i.get("amount_g", 0.0) or 0.0) for i in ingredients)
+    if serving_g <= 0 or total_g <= 0:
+        return None
+    return total_g / serving_g
+
+
+def _estimate_servings(row: Dict, ingredients: List[Dict]) -> Optional[int]:
+    """재료 분량이 몇 인분인지 역산. 근거가 약하면 None.
+
+    실측(1,156건) 결과 INFO_WGT를 가진 레시피는 285건(24.7%)뿐이고,
+    역산값에도 잡음이 있다. 10인분 이상이 19건, 47인분이 1건 나왔는데
+    실제로 그런 레시피는 없다. INFO_WGT 자체가 부정확한 경우가 섞여 있다.
+      예) 곤약잡채 INFO_WGT=45g → 잡채 1인분이 45g일 수 없다
+
+    또 INFO_WGT는 '완성된 요리' 중량이고 재료합은 '조리 전' 값이라
+    국물요리는 물이 더해져 늘고, 김치·나물은 수분이 빠져 줄어든다.
+
+    그래서 **1~4인분 범위로 떨어질 때만** 표시한다. 그 밖은 역산이
+    빗나간 것으로 보고 아무것도 보여주지 않는다. 틀린 인분 수를 적는 것은
+    표시하지 않는 것보다 나쁘다.
+    """
+    # 열량 기준을 먼저 쓰고, 안 되면 중량 기준으로 넘어간다
+    ratio = _servings_by_energy(row, ingredients)
+    if ratio is None:
+        ratio = _servings_by_weight(row, ingredients)
+    if ratio is None:
+        return None
+
+    n = round(ratio)
+    if not (1 <= n <= 4):
+        return None
+    # 반올림 오차가 크면(예: 1.45 → 1) 신뢰할 수 없다
+    if abs(ratio - n) > 0.35:
+        return None
+    return n
 
 
 def _is_valid_ingredient_name(standard_nm: str) -> bool:
     if not standard_nm:
         return False
-    if len(standard_nm) >= 2:
+    nm = standard_nm.strip()
+    if nm in _NON_INGREDIENT_EXACT:
+        return False
+    if "인분" in nm:          # "2인분 기준" 등 분량 안내
+        return False
+    if len(nm) >= 2:
         return True
-    return standard_nm in _SINGLE_CHAR_INGREDIENTS
+    return nm in _SINGLE_CHAR_INGREDIENTS
 
 
 def _parse_ingredients(parts_text: str) -> List[Dict]:
@@ -376,9 +661,20 @@ def _parse_ingredients(parts_text: str) -> List[Dict]:
     lines = [line.strip() for line in text.split("\n") if line.strip()]
     ingredients = []
 
+    # [FIX] 식약처 원문의 [재료]·[양념] 같은 섹션명을 그냥 지우고 있었다.
+    # 우리의식탁·만개의레시피 등은 '기본 재료 / 양념장 재료'로 묶어 보여주는데,
+    # 그 정보가 원문에 있는데도 버려서 한 덩어리로만 나열됐다.
+    # 섹션명을 각 재료에 section 필드로 붙여 화면에서 묶을 수 있게 한다.
+    section = ""
+
     for line in lines:
-        # 불릿 제거 + 대괄호 섹션명 전체 제거 (줄 어디서든)
-        line    = re.sub(r"^[●•·]\s*", "", line).strip()
+        # 불릿 제거
+        line = re.sub(r"^[●•·]\s*", "", line).strip()
+        # 대괄호 섹션명은 기억해 두고 본문에서는 제거
+        for sec in re.findall(r"\[(.*?)\]", line):
+            sec = sec.strip()
+            if sec:
+                section = sec
         cleaned = re.sub(r"\[.*?\]\s*", "", line).strip()
 
         for chunk in _split_chunks(cleaned):
@@ -403,6 +699,9 @@ def _parse_ingredients(parts_text: str) -> List[Dict]:
 
             ingredients.append({
                 "raw_name":               chunk,
+                "section":                section,
+                # 조리 단위로 깔끔하게 떨어질 때만 값이 들어간다 (아니면 None)
+                "amount_display":         to_cooking_unit(standard_nm, amount_g),
                 "standard_nm":            standard_nm,
                 "amount_g":               round(amount_g, 1),
                 "protein_g":              0.0,
@@ -421,12 +720,13 @@ def _parse_ingredients(parts_text: str) -> List[Dict]:
     return ingredients
 
 
-async def _enrich_ingredient(ing: Dict) -> Dict:
+async def _enrich_ingredient(ing: Dict, allow_ai: bool = True) -> Dict:
     try:
         nutrition_info, price_info = await asyncio.gather(
             nutrition_service.get_nutrition_for_ingredient(
                 ing.get("standard_nm", ""),
                 float(ing.get("amount_g", 0.0) or 0.0),
+                allow_ai=allow_ai,
             ),
             price_service.get_price_for_ingredient(
                 ing.get("standard_nm", ""),
@@ -449,22 +749,23 @@ async def _enrich_ingredient(ing: Dict) -> Dict:
     return ing
 
 
-async def _enrich_ingredients(ingredients: List[Dict]) -> List[Dict]:
+async def _enrich_ingredients(ingredients: List[Dict], allow_ai: bool = True) -> List[Dict]:
     if not ingredients:
         return []
 
     # [FIX] 재료마다 각각 Gemini를 부르면 레시피 하나에 재료 개수만큼(N번)
     # API 호출이 발생함. 로컬/캐시에 없는 재료명을 먼저 모아서 딱 한 번의
     # 배치 요청으로 채워놓은 뒤, 개별 enrich는 캐시에서 즉시 읽어가게 함.
-    missing = [
-        ing.get("standard_nm", "")
-        for ing in ingredients
-        if ing.get("standard_nm") and not nutrition_service.has_local_or_cached(ing["standard_nm"])
-    ]
-    if missing:
-        await nutrition_service.estimate_nutrition_batch(missing)
+    if allow_ai:
+        missing = [
+            ing.get("standard_nm", "")
+            for ing in ingredients
+            if ing.get("standard_nm") and not nutrition_service.has_local_or_cached(ing["standard_nm"])
+        ]
+        if missing:
+            await nutrition_service.estimate_nutrition_batch(missing)
 
-    tasks = [_enrich_ingredient(dict(ing)) for ing in ingredients]
+    tasks = [_enrich_ingredient(dict(ing), allow_ai) for ing in ingredients]
     return await asyncio.gather(*tasks)
 
 
@@ -476,16 +777,19 @@ def _safe_json(resp: httpx.Response, label: str) -> Dict:
         return {}
 
 
-async def _format(row: Dict) -> Dict:
+async def _format(row: Dict, allow_ai: bool = True) -> Dict:
+    # [FIX] 식약처 COOKRCP01은 MANUAL01~20과 짝을 이루는 MANUAL_IMG01~20
+    # (단계별 사진 URL)을 함께 제공하는데 기존 코드가 이를 버리고 있었다.
+    # 조리 순서가 텍스트만 나와서 따라하기 어렵다는 피드백에 대한 대응.
     steps = []
     for i in range(1, 21):
-        key  = f"MANUAL{i:02d}"
-        desc = (row.get(key) or "").replace("\\n", "\n").strip()
+        desc = (row.get(f"MANUAL{i:02d}") or "").replace("\\n", "\n").strip()
+        img  = (row.get(f"MANUAL_IMG{i:02d}") or "").strip()
         if desc:
-            steps.append({"step": i, "desc": desc})
+            steps.append({"step": i, "desc": desc, "img_url": img})
 
     ingredients = _parse_ingredients(row.get("RCP_PARTS_DTLS", ""))
-    ingredients = await _enrich_ingredients(ingredients)
+    ingredients = await _enrich_ingredients(ingredients, allow_ai)
 
     # [FIX] sugar_g/fiber_g/calcium_mg는 식약처 레시피 API가 애초에 제공하지 않는
     # 필드라 항상 0으로 고정되어 있었음 → 재료별 폴백 영양DB(nutrition_service)
@@ -518,6 +822,29 @@ async def _format(row: Dict) -> Dict:
         "price_total_krw": round(
             sum(float(ing.get("price_krw", 0.0) or 0.0) for ing in ingredients), 1
         ),
+        # [FIX] 재료비가 '몇 인분'인지 알 수 없는 문제에 대한 대응.
+        #
+        # 식약처 영양정보(INFO_ENG 등)는 1인분 기준인데, price_total_krw는
+        # RCP_PARTS_DTLS(재료 목록)를 그대로 합산한 값이다. 재료 목록이 몇 인분인지는
+        # 레시피마다 다른데(캐시 1,142건 측정: 중앙값 240g, 최대 4,940g),
+        # 추천 점수는 이 둘을 같은 축에서 비교하고 있다.
+        #
+        # 1인분으로 환산하려면 1인분 중량(INFO_WGT)이 필요한데, 식약처 API가
+        # 이 필드를 빈 값("")으로 내려준다(50건 전수 확인). 따라서 환산할 근거가 없다.
+        # 근거 없는 추정치를 점수에 넣는 대신, 재료 총 중량을 함께 노출해
+        # 사용자가 "이 금액이 어느 정도 분량에 대한 것인지" 판단할 수 있게 한다.
+        "total_ingredient_g": round(
+            sum(float(ing.get("amount_g", 0.0) or 0.0) for ing in ingredients), 1
+        ),
+        # [FIX] 재료 분량이 몇 인분인지 표시하기 위한 값.
+        #
+        # 식약처 INFO_WGT(1인분 완성 중량)가 있는 레시피에 한해
+        # '재료 총중량 ÷ 1인분 중량'으로 역산한다. 값이 없으면 None이고,
+        # 화면에서는 인분 표시를 생략한다(추정으로 적으면 틀린 정보가 된다).
+        #
+        # 주의: INFO_WGT는 '완성된 요리' 기준이고 재료 총중량은 '조리 전'이라
+        # 국물요리는 물이 더해지고 구이는 수분이 날아가 오차가 있다. 추정값이다.
+        "servings": _estimate_servings(row, ingredients),   # 영양 enrich 이후에 계산됨
         "errors": []
     }
 
@@ -556,12 +883,13 @@ async def search_recipes(query: str) -> List[Dict]:
             return []
 
 
-async def get_recipe_detail(recipe_id: str, name: str = None) -> Optional[Dict]:
+async def get_recipe_detail(recipe_id: str, name: str = None,
+                            allow_ai: bool = True) -> Optional[Dict]:
     recipe_id = str(recipe_id)
     cached = RECIPE_CACHE.get(recipe_id)
     if cached:
         print(f"[recipe_service] 캐시 적중: {recipe_id}")
-        return await _format(cached)
+        return await _format(cached, allow_ai)
 
     if not MY_API_KEY:
         return None
@@ -576,10 +904,10 @@ async def get_recipe_detail(recipe_id: str, name: str = None) -> Optional[Dict]:
                 for r in rows:
                     _save_to_cache(r)
                     if str(r.get("RCP_SEQ") or "") == recipe_id:
-                        return await _format(r)
+                        return await _format(r, allow_ai)
                 for r in rows:
                     if (r.get("RCP_NM") or "").strip() == name.strip():
-                        return await _format(r)
+                        return await _format(r, allow_ai)
 
             id_url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/1/RCP_SEQ={recipe_id}"
             res    = await client.get(id_url)
@@ -589,7 +917,7 @@ async def get_recipe_detail(recipe_id: str, name: str = None) -> Optional[Dict]:
                 r = rows[0]
                 _save_to_cache(r)
                 if str(r.get("RCP_SEQ") or "") == recipe_id:
-                    return await _format(r)
+                    return await _format(r, allow_ai)
 
             return {"id": recipe_id, "name": name or "", "category": "", "method": "",
                     "image_url": "", "steps": [], "source": "식약처", "ingredients": [],

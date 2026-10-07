@@ -36,12 +36,13 @@ class Settings(BaseSettings):
     groq_model:   str = "openai/gpt-oss-120b"
 
     # ── 앱 설정 ───────────────────────────────────────────────
-    use_mock: bool = True          # True면 샘플 JSON 사용, False면 실제 API 호출
-    port: int = 8000
+    # [FIX] use_mock은 코드 어디에서도 쓰이지 않는다. 샘플 JSON 모드는
+    # 이미 제거됐고 각 서비스가 실제 API만 호출한다. 혼란을 막기 위해 삭제.
+    port: int = 8888               # main.py 직접 실행 시 사용 (.env의 PORT가 우선)
     allowed_origins: str = "*"
 
     class Config:
-        # [FIX] 상대경로("​.env")로 두면 "터미널이 어느 폴더에 있는지"에 따라
+        # [FIX] 상대경로(".env")로 두면 "터미널이 어느 폴더에 있는지"에 따라
         # .env를 못 찾는 문제가 있었음(backend 폴더에서 실행하면 backend/.env를
         # 찾으려 하는데, 실제 .env는 backend보다 한 단계 위에 있음).
         # config.py 파일 위치를 기준으로 한 절대경로로 고정.

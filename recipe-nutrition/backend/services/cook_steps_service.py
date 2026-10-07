@@ -62,7 +62,11 @@ else:
 
 def _fallback(original_steps: List[str]) -> List[Dict]:
     """AI를 쓸 수 없거나 실패했을 때: 원본 문장을 그대로 detail에 담아 반환.
-    화면이 비거나 에러로 깨지는 일이 없도록 하는 안전판."""
+    화면이 비거나 에러로 깨지는 일이 없도록 하는 안전판.
+
+    [FIX] is_fallback 플래그를 추가했다. 이전에는 AI 해설과 원본 폴백이
+    응답상 구분되지 않아, 사용자는 "쉽게 보기를 눌러도 원본과 똑같다"고
+    느끼고 개발자는 기능 버그인지 AI 실패인지 알 수 없었다."""
     return [
         {
             "step":         i + 1,
@@ -70,9 +74,27 @@ def _fallback(original_steps: List[str]) -> List[Dict]:
             "detail":       text,
             "tip":          "",
             "duration_min": 0,
+            "is_fallback":  True,
         }
         for i, text in enumerate(original_steps)
     ]
+
+
+def _coerce_list(data):
+    """[FIX] response_mime_type="application/json"만 주면 모델이 최상위를
+    객체로 감싸 {"steps": [...]} 형태로 돌려주는 경우가 있다. 예전에는
+    isinstance(data, list)가 False라는 이유로 통째로 버리고 원본 폴백을
+    내보냈다. 객체로 와도 안에 든 배열을 꺼내 쓴다."""
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        for key in ("steps", "result", "results", "items", "data"):
+            if isinstance(data.get(key), list):
+                return data[key]
+        for v in data.values():
+            if isinstance(v, list):
+                return v
+    return None
 
 
 def _clean_step_text(text: str) -> str:
@@ -153,23 +175,29 @@ async def get_easy_steps(
             as_object=False,  # 최상위가 배열([...])이라 Groq의 json_object 강제는 끔
         )
 
-        if not isinstance(data, list):
-            print(f"[cook_steps_service] AI 응답이 배열이 아님({provider}) — 원본으로 폴백. 원본 응답: {str(data)[:300]}")
+        rows = _coerce_list(data)
+        if rows is None:
+            print(f"[cook_steps_service] AI 응답에서 배열을 찾지 못함({provider}) — 원본으로 폴백. 원본 응답: {str(data)[:300]}")
             return _fallback(cleaned)
 
-        if len(data) != len(cleaned):
-            print(f"[cook_steps_service] AI 응답 개수 불일치({provider}): 요청 {len(cleaned)} / 응답 {len(data)} — 원본으로 폴백")
-            return _fallback(cleaned)
+        # [FIX] 개수가 안 맞는다고 전부 버리지 않는다. AI가 단계를 합치거나
+        # 쪼개면 흔히 어긋나는데, 예전에는 그때마다 통째로 원본 폴백이 나가서
+        # "쉽게 보기가 원본과 똑같다"의 원인 중 하나였다.
+        # 받은 만큼만 쓰고 모자란 단계만 원본으로 채운다.
+        if len(rows) != len(cleaned):
+            print(f"[cook_steps_service] AI 응답 개수 불일치({provider}): "
+                  f"요청 {len(cleaned)} / 응답 {len(rows)} — 받은 만큼만 사용")
 
         result = []
-        for i, (orig, row) in enumerate(zip(cleaned, data)):
-            if not isinstance(row, dict):
+        for i, orig in enumerate(cleaned):
+            row = rows[i] if i < len(rows) and isinstance(rows[i], dict) else None
+            if row is None:
                 result.append({
                     "step": i + 1, "original": orig, "detail": orig,
-                    "tip": "", "duration_min": 0,
+                    "tip": "", "duration_min": 0, "is_fallback": True,
                 })
                 continue
-            detail_text = str(row.get("detail") or orig).strip()
+            detail_text = str(row.get("detail") or "").strip() or orig
             tip_text    = str(row.get("tip") or "").strip()
             try:
                 duration = int(row.get("duration_min") or 0)
@@ -183,9 +211,13 @@ async def get_easy_steps(
                 "detail":       detail_text,
                 "tip":          tip_text,
                 "duration_min": duration,
+                # 해설이 원본과 사실상 같으면 폴백으로 표시
+                "is_fallback":  detail_text.strip() == orig.strip(),
             })
 
-        if recipe_id:
+        # [FIX] 전부 원본 폴백인 결과를 캐시에 저장하면, 할당량이 회복된 뒤에도
+        # 영원히 원본만 보이게 된다. 하나라도 AI 해설이 있을 때만 저장한다.
+        if recipe_id and not all(r.get("is_fallback") for r in result):
             _CACHE[recipe_id] = result
             _save_cache()
 
@@ -193,7 +225,6 @@ async def get_easy_steps(
         return result
 
     except Exception as e:
-        import traceback
-        print(f"[cook_steps_service] AI 조리순서 해설 오류 ({type(e).__name__}): {e} — 원본으로 폴백")
-        traceback.print_exc()
+        print(f"[cook_steps_service] AI 조리순서 해설 오류 ({type(e).__name__}): "
+              f"{str(e)[:200]} — 원본으로 폴백")
         return _fallback(cleaned)

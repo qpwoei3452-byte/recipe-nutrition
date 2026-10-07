@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>나만의 레시피 추천</title>
-    <link rel="stylesheet" href="/static/css/style.css?v=300">
+    <link rel="stylesheet" href="/static/css/style.css?v=410">
 </head>
 <body>
     <div class="app-wrap">
@@ -244,14 +244,14 @@
     </script>
 
     <!-- ★★★ features.js: 6가지 편의기능 ★★★ -->
-    <script src="/static/features.js?v=303"></script>
+    <script src="/static/features.js?v=410"></script>
 
     <script type="module">
         import {
             recommendRecipes, aiAnalyzeRecipe, getRecipeDetail,
             createProfile, getProfile, updateProfileWeights, logFood
-        } from '/static/js/api.js?v=301';
-        import { renderRecipeList, renderLoading, renderDetail, renderError } from '/static/js/render.js?v=302';
+        } from '/static/js/api.js?v=410';
+        import { renderRecipeList, renderLoading, renderDetail, renderError } from '/static/js/render.js?v=410';
 
         const PRESETS = {
             '가성비':   { price: 40, protein: 18, calorie: 10, sodium: 7,  time: 25 },
@@ -441,7 +441,6 @@
                     personalizedByLog = data.length > 0 && data[0].personalized_by_log === true;
                     renderProfileBar();
                     renderRecipeList(data, lAr, runSelect, '맞춤');
-                    setTimeout(() => { window.featuresScanCards && window.featuresScanCards(); }, 300);
                 } catch (e) {
                     console.error('[검색 오류]', e);
                     renderError(lAr, '검색 실패: ' + e.message);
@@ -517,7 +516,14 @@
                 }
             }
 
+            // [FIX] 레시피를 빠르게 연달아 클릭하면, 먼저 누른 레시피의 AI 분석이
+            // 수 초 뒤 늦게 도착해 나중에 연 레시피 화면을 덮어쓰는 문제가 있었다.
+            // (증상: 이전에 준 평가가 계속 보이고 새 레시피는 평가가 안 됨)
+            // 클릭할 때마다 번호를 올리고, 응답이 돌아왔을 때 번호가 바뀌었으면 버린다.
+            let _selectToken = 0;
+
             async function runSelect(recipe) {
+                const myToken = ++_selectToken;
                 dAr.innerHTML = '';
                 renderLoading(dAr, '레시피 정보를 불러오는 중...');
                 dAr.scrollIntoView({ behavior: 'smooth' });
@@ -526,6 +532,7 @@
                     const name     = recipe.name ?? recipe.RCP_NM ?? '';
 
                     const detail = await getRecipeDetail(recipeId, name);
+                    if (myToken !== _selectToken) return;   // 그 사이 다른 카드를 눌렀으면 폐기
                     detail.score  = recipe.score;
                     detail.mode   = recipe.mode;
                     detail.reason = recipe.reason;
@@ -552,7 +559,9 @@
                                     historyNames = (p.food_log || []).map(e => e.name);
                                 } catch {}
                             }
+                            if (myToken !== _selectToken) return;
                             const ai = await aiAnalyzeRecipe(recipeId, name, historyNames);
+                            if (myToken !== _selectToken) return;   // ★ 낡은 응답은 화면에 반영하지 않음
                             if (ai && ai.cook_time_min) {
                                 detail.cook_time_min        = ai.cook_time_min;
                                 detail.cook_time_source     = ai.cook_time_source;
@@ -568,6 +577,7 @@
                         }
                     })();
                 } catch (e) {
+                    if (myToken !== _selectToken) return;
                     console.error('[상세 조회 오류]', e);
                     renderDetail(recipe, dAr);
                 }
