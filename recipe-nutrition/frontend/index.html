@@ -774,7 +774,7 @@
             if (pdClose) pdClose.addEventListener('click', closeProfileDrawer);
 
             // ── 페이지네이션 상태 ──────────────────────────────────────
-            const PAGE_SIZE = 20;
+            const PAGE_SIZE = 10;
             let _allRecipes = [];
             let _currentPage = 1;
             const pgAr = document.getElementById('paginationArea');
@@ -842,7 +842,7 @@
                     if (foodHistory.length > 0) opts.history = foodHistory;
                     const checkedAllergens = [...document.querySelectorAll('#allergyChips input:checked')].map(el => el.value);
                     if (checkedAllergens.length) opts.allergens = checkedAllergens;
-                    const data = await recommendRecipes(sIn.value, '기본', 20, opts);
+                    const data = await recommendRecipes(sIn.value, '기본', 100, opts);
                     personalizedByLog = data.length > 0 && data[0].personalized_by_log === true;
                     renderProfileBar();
                     _allRecipes = data;

@@ -37,7 +37,7 @@ export function renderError(container, message = '오류가 발생했습니다.'
 
 /* ── 레시피 카드 목록 ──────────────────────────────
    recommend 결과는 score / reason / _scores 포함    */
-export function renderRecipeList(recipes, container, onSelect, mode = '기본') {
+export function renderRecipeList(recipes, container, onSelect, mode = '기본', rankOffset = 0) {
   container.innerHTML = '';
 
   if (!recipes || recipes.length === 0) {
@@ -60,7 +60,7 @@ export function renderRecipeList(recipes, container, onSelect, mode = '기본') 
   grid.className = 'recipe-grid';
 
   recipes.forEach((r, idx) => {
-    const rank   = idx + 1;
+    const rank   = idx + 1 + rankOffset;
     const score  = r.score ?? null;
     const reason = r.reason ?? '';
     // 다양성 패널티로 순위가 조정된 항목 (이전에 먹었거나 이미 추천된 것과 유사)

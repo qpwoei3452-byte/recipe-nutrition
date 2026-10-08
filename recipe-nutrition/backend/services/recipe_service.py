@@ -713,10 +713,9 @@ async def search_recipes(query: str) -> List[Dict]:
                     rows.append(r)
         else:
             # 빈 검색 → 전체 추천용 (100개, 속도 우선)
-            browse_url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/100"
-            print(f"[search_recipes] browse_url={browse_url}")
-            rows = await _fetch_by_url(client, browse_url, "browse")
-
+                        browse_url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/300"
+                        print(f"[search_recipes] browse_url={browse_url}")
+                        rows = await _fetch_by_url(client, browse_url, "browse")
         result = []
         for r in rows:
             _save_to_cache(r)
