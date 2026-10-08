@@ -33,6 +33,11 @@ class FoodLogIn(BaseModel):
     food_name: str = Field(..., min_length=1)
 
 
+class ProfileInfoIn(BaseModel):
+    nickname: str = Field(default="", max_length=20)
+    avatar_emoji: str = Field(default="🍽️", max_length=4)
+
+
 @router.post("")
 async def create_profile(body: CreateProfileIn):
     weights = body.weights.model_dump() if body.weights else None
@@ -58,6 +63,15 @@ async def update_weights(user_id: str, body: WeightsIn):
 @router.post("/{user_id}/log")
 async def add_food_log(user_id: str, body: FoodLogIn):
     p = profile_service.add_food_log(user_id, body.food_name)
+    if not p:
+        raise HTTPException(status_code=404, detail="프로필을 찾을 수 없습니다.")
+    return p
+
+
+@router.put("/{user_id}/info")
+async def update_profile_info(user_id: str, body: ProfileInfoIn):
+    """닉네임 / 아바타 이모지 업데이트."""
+    p = profile_service.update_info(user_id, body.nickname, body.avatar_emoji)
     if not p:
         raise HTTPException(status_code=404, detail="프로필을 찾을 수 없습니다.")
     return p

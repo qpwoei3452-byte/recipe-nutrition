@@ -849,38 +849,68 @@ async def _format(row: Dict, allow_ai: bool = True) -> Dict:
     }
 
 
+def _row_to_summary(r: Dict) -> Dict:
+    return {
+        "id":        str(r.get("RCP_SEQ") or ""),
+        "name":      str(r.get("RCP_NM") or ""),
+        "category":  r.get("RCP_PAT2") or "기타",
+        "method":    r.get("RCP_WAY2") or "기타",
+        "calories":  _n(r.get("INFO_ENG")),
+        "image_url": r.get("ATT_FILE_NO_MAIN") or "",
+        "tags":      []
+    }
+
+
+async def _fetch_by_url(client: httpx.AsyncClient, url: str, label: str) -> List[Dict]:
+    try:
+        resp = await client.get(url)
+        data = _safe_json(resp, label)
+        return data.get("COOKRCP01", {}).get("row", [])
+    except Exception as e:
+        print(f"[search_recipes/{label} 오류] {e}")
+        return []
+
+
 async def search_recipes(query: str) -> List[Dict]:
     print(f"[search_recipes] MFDS_API_KEY length={len(MY_API_KEY)}")
     if not MY_API_KEY:
         return []
 
-    url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/50"
-    if query:
-        url += f"/RCP_NM={quote(query)}"
-    print(f"[search_recipes] URL={url}")
-
+    # ── #1 Fix: 이름 검색 + 재료 검색을 동시에 수행 ──────────────────────
+    # RCP_NM=query  → 레시피 이름에 검색어 포함 (예: "토마토 파스타")
+    # RCP_PARTS_DTLS=query → 재료 목록에 검색어 포함 (예: 방울토마토가 들어간 레시피)
+    # 두 결과를 합산하면 "토마토" 검색 시 "방울토마토" 재료 레시피도 나온다.
     async with httpx.AsyncClient(timeout=15) as client:
-        try:
-            resp = await client.get(url)
-            data = _safe_json(resp, "search_recipes")
-            rows = data.get("COOKRCP01", {}).get("row", [])
-            result = []
-            for r in rows:
-                _save_to_cache(r)
-                result.append({
-                    "id":        str(r.get("RCP_SEQ") or ""),
-                    "name":      str(r.get("RCP_NM") or ""),
-                    "category":  r.get("RCP_PAT2") or "기타",
-                    "method":    r.get("RCP_WAY2") or "기타",
-                    "calories":  _n(r.get("INFO_ENG")),
-                    "image_url": r.get("ATT_FILE_NO_MAIN") or "",
-                    "tags":      []
-                })
-            print(f"[recipe_service] search 결과 {len(result)}건, 캐시 {len(RECIPE_CACHE)}건")
-            return result
-        except Exception as e:
-            print(f"[search_recipes 오류] {e}")
-            return []
+        if query:
+            name_url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/100/RCP_NM={quote(query)}"
+            ing_url  = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/100/RCP_PARTS_DTLS={quote(query)}"
+            print(f"[search_recipes] name_url={name_url}")
+            print(f"[search_recipes] ing_url={ing_url}")
+            name_rows, ing_rows = await asyncio.gather(
+                _fetch_by_url(client, name_url, "name"),
+                _fetch_by_url(client, ing_url,  "ingredient"),
+            )
+            # 중복 제거: RCP_SEQ 기준, 이름 검색 결과 우선
+            seen: set[str] = set()
+            rows: List[Dict] = []
+            for r in name_rows + ing_rows:
+                seq = str(r.get("RCP_SEQ") or "")
+                if seq and seq not in seen:
+                    seen.add(seq)
+                    rows.append(r)
+        else:
+            # 빈 검색 → 전체 추천용
+            browse_url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/100"
+            print(f"[search_recipes] browse_url={browse_url}")
+            rows = await _fetch_by_url(client, browse_url, "browse")
+
+        result = []
+        for r in rows:
+            _save_to_cache(r)
+            result.append(_row_to_summary(r))
+
+        print(f"[recipe_service] search 결과 {len(result)}건, 캐시 {len(RECIPE_CACHE)}건")
+        return result
 
 
 async def get_recipe_detail(recipe_id: str, name: str = None,

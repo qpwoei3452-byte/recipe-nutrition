@@ -1639,3 +1639,241 @@ body {
 @media (max-width: 720px) {
   .detail-actions { width: 100%; justify-content: space-between; }
 }
+
+/* =====================================================================
+   Feature 2: 조리 순서 사진 화질 개선
+   ===================================================================== */
+.step-photo img,
+.easy-step-photo img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  object-fit: cover;
+  width: 100%;
+  border-radius: 8px;
+}
+
+/* =====================================================================
+   Feature 4: 헤더 액션 버튼 그룹
+   ===================================================================== */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.profile-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.profile-tab-btn:hover { background: #4f46e5; }
+
+/* =====================================================================
+   Feature 4: 프로필 드로어
+   ===================================================================== */
+.profile-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1100;
+}
+.profile-drawer {
+  position: fixed;
+  top: 0; right: 0;
+  width: min(400px, 100vw);
+  height: 100dvh;
+  background: #fff;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.18);
+  overflow-y: auto;
+  animation: slideInDrawer 0.25s ease;
+}
+@keyframes slideInDrawer {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@media (prefers-color-scheme: dark) {
+  .profile-drawer { background: #1e1e2e; color: #e2e8f0; }
+}
+body.drawer-open { overflow: hidden; }
+
+.profile-drawer-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 16px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+}
+.profile-drawer-avatar {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.profile-drawer-name {
+  flex: 1;
+  font-weight: 700;
+  font-size: 1.05rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-drawer-close {
+  background: rgba(255,255,255,0.25);
+  border: none;
+  color: #fff;
+  font-size: 1.1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.profile-drawer-close:hover { background: rgba(255,255,255,0.45); }
+
+/* 탭 네비 */
+.profile-drawer-tabs {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+.pdtab {
+  flex: 1;
+  padding: 11px 4px;
+  border: none;
+  background: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.pdtab.active { color: #6366f1; border-bottom-color: #6366f1; }
+.pdtab:hover:not(.active) { color: #374151; }
+
+/* 탭 패널 */
+.pdpanel { display: none; flex-direction: column; padding: 16px; gap: 12px; flex: 1; }
+.pdpanel.active { display: flex; }
+
+.pd-section {
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pd-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #374151;
+  margin: 0;
+}
+.pd-hint {
+  font-size: 0.76rem;
+  color: #9ca3af;
+  font-weight: 400;
+}
+.pd-hint-text {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin: 0;
+}
+.pd-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.pd-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.pd-input:focus { border-color: #6366f1; }
+.pd-save-btn {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+/* 아바타 이모지 그리드 */
+.avatar-emoji-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.av-opt {
+  font-size: 1.6rem;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+  line-height: 1;
+}
+.av-opt:hover { background: #ede9fe; }
+.av-opt.selected { border-color: #6366f1; background: #ede9fe; }
+
+/* 활동기록 */
+.pd-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pd-activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  gap: 8px;
+}
+.pd-activity-name {
+  flex: 1;
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pd-go-btn {
+  padding: 4px 10px;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.pd-go-btn:hover { background: #4f46e5; }
+.pd-empty {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  text-align: center;
+  padding: 12px 0;
+}

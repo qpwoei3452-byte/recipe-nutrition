@@ -78,6 +78,16 @@ export async function updateProfileWeights(userId, weights) {
   return res.json();
 }
 
+export async function updateProfileInfo(userId, nickname, avatarEmoji) {
+  const res = await fetch(`/api/profile/${encodeURIComponent(userId)}/info`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nickname: nickname || '', avatar_emoji: avatarEmoji || '🍽️' }),
+  });
+  if (!res.ok) throw new Error('프로필 정보 업데이트 실패: ' + res.status);
+  return res.json();
+}
+
 export async function logFood(userId, foodName) {
   const res = await fetch(`/api/profile/${encodeURIComponent(userId)}/log`, {
     method: 'POST',

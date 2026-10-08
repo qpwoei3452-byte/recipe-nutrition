@@ -3,125 +3,338 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>나만의 레시피 추천</title>
-    <link rel="stylesheet" href="/static/css/style.css?v=410">
+    <title>🍳 레시피 영양 추천</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=500">
 </head>
 <body>
-    <div class="app-wrap">
-        <header class="app-header">
-            <h1 class="app-title">나만의 <em>맞춤</em> 레시피 추천</h1>
-            <button id="settingsBtn" class="settings-btn" title="선호도 설정" style="display:none;">⚙️ 선호도 설정</button>
-        </header>
 
-        <!-- 온보딩: 첫 진입 시 선호도 1회 설정 (회원가입 단계에 해당) -->
-        <section id="onboarding" class="onboarding" style="display:none;">
-            <div class="onboarding-card">
-                <h2 class="onboarding-title">당신에게 맞는 추천을 위해<br>알려주세요</h2>
-                <p class="onboarding-sub">각 항목이 얼마나 중요한지 설정하면, 이후엔 검색만 해도 자동으로 맞춤 추천을 받아요. 사용할수록 선택 기록을 학습해 더 정교해집니다.</p>
+<!-- 온보딩 -->
+<section id="onboarding" style="display:flex;">
+    <div class="onboard-card">
+        <h1>🍽️ 나만의 레시피 추천</h1>
+        <p class="onboard-sub">선호도를 설정하면 딱 맞는 레시피를 추천해 드려요</p>
 
-                <div class="pref-sliders" id="onboardSliders">
-                    <div class="pref-row">
-                        <label>💰 가격</label>
-                        <div class="slider-wrap">
-                            <span class="slider-end">낮음</span>
-                            <input type="range" min="0" max="100" value="25" class="pref-slider" data-key="price">
-                            <span class="slider-end">높음</span>
-                        </div>
-                        <span class="pref-val" data-for="price">25%</span>
-                    </div>
-                    <div class="pref-row">
-                        <label>💪 단백질</label>
-                        <div class="slider-wrap">
-                            <span class="slider-end">낮음</span>
-                            <input type="range" min="0" max="100" value="22" class="pref-slider" data-key="protein">
-                            <span class="slider-end">높음</span>
-                        </div>
-                        <span class="pref-val" data-for="protein">22%</span>
-                    </div>
-                    <div class="pref-row">
-                        <label>🔥 칼로리</label>
-                        <div class="slider-wrap">
-                            <span class="slider-end">낮음</span>
-                            <input type="range" min="0" max="100" value="18" class="pref-slider" data-key="calorie">
-                            <span class="slider-end">높음</span>
-                        </div>
-                        <span class="pref-val" data-for="calorie">18%</span>
-                    </div>
-                    <div class="pref-row">
-                        <label>🧂 나트륨</label>
-                        <div class="slider-wrap">
-                            <span class="slider-end">낮음</span>
-                            <input type="range" min="0" max="100" value="15" class="pref-slider" data-key="sodium">
-                            <span class="slider-end">높음</span>
-                        </div>
-                        <span class="pref-val" data-for="sodium">15%</span>
-                    </div>
-                    <div class="pref-row">
-                        <label>⏱️ 조리시간</label>
-                        <div class="slider-wrap">
-                            <span class="slider-end">낮음</span>
-                            <input type="range" min="0" max="100" value="20" class="pref-slider" data-key="time">
-                            <span class="slider-end">높음</span>
-                        </div>
-                        <span class="pref-val" data-for="time">20%</span>
-                    </div>
+        <div class="preset-row">
+            <button class="preset-btn" data-preset="가성비">💰 가성비</button>
+            <button class="preset-btn" data-preset="고단백">💪 고단백</button>
+            <button class="preset-btn" data-preset="저칼로리">🥗 저칼로리</button>
+            <button class="preset-btn" data-preset="저염">🫀 저염</button>
+            <button class="preset-btn" data-preset="기본">⚖️ 기본</button>
+        </div>
+
+        <div class="sliders-wrap">
+            <div class="slider-item">
+                <span class="slider-label">💰 가격 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="25" class="pref-slider" data-key="price">
+                    <span class="slider-end">높음</span>
                 </div>
-
-                <div class="slider-total-row">
-                    <span class="slider-total-label">합계</span>
-                    <div class="slider-total-bar-bg">
-                        <div class="slider-total-bar-fill" id="onboardTotalBar"></div>
-                    </div>
-                    <span class="slider-total-val" id="onboardTotal">100</span>
-                    <span class="slider-total-unit">%</span>
-                </div>
-
-                <div class="onboard-presets">
-                    <span class="preset-label">빠른 설정:</span>
-                    <button class="preset-btn" data-preset="가성비">가성비형</button>
-                    <button class="preset-btn" data-preset="고단백">고단백형</button>
-                    <button class="preset-btn" data-preset="저칼로리">저칼로리형</button>
-                    <button class="preset-btn" data-preset="기본">균형형</button>
-                </div>
-
-                <div class="onboard-actions">
-                    <button id="onboardSkip" class="btn-secondary">건너뛰기 (균형 추천)</button>
-                    <button id="onboardSave" class="btn-primary">이 설정으로 시작하기</button>
-                </div>
+                <span class="pref-val" data-for="price">25%</span>
             </div>
-        </section>
-
-        <!-- 메인: 모드 선택 없이 검색만 → 자동 맞춤 추천 -->
-        <section id="mainSection" class="search-section" style="display:none;">
-            <div class="my-profile-bar" id="myProfileBar"></div>
-            <div class="search-box">
-                <input type="text" id="searchInput" class="search-input" placeholder="재료·음식명 검색 (비워두면 내 취향 전체 추천)" />
-                <button id="searchBtn" class="search-btn">검색</button>
+            <div class="slider-item">
+                <span class="slider-label">💪 단백질 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="22" class="pref-slider" data-key="protein">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="protein">22%</span>
             </div>
-
-            <!-- 최근 먹은 음식 입력 패널 -->
-            <div class="history-panel" id="historyPanel">
-              <div class="history-header">
-                <span class="history-title">🍽️ 최근 먹은 음식</span>
-                <span class="history-hint">입력하면 비슷한 음식의 추천 순위가 낮아져요</span>
-              </div>
-              <div class="history-input-row">
-                <input type="text" id="historyInput"
-                  class="history-input"
-                  placeholder="예: 김치찌개, 된장국, 계란볶음밥">
-                <button class="history-add-btn" id="historyAddBtn">추가</button>
-              </div>
-              <div class="history-tags" id="historyTags">
-                <span class="history-empty">아직 입력된 음식이 없어요</span>
-              </div>
+            <div class="slider-item">
+                <span class="slider-label">🔥 칼로리 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="18" class="pref-slider" data-key="calorie">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="calorie">18%</span>
             </div>
-            <!-- 알레르기 필터 -->
-            <div class="history-panel" id="allergyPanel">
-              <div class="history-header">
-                <span class="history-title">⚠️ 알레르기 설정</span>
-                <span class="history-hint">선택한 재료가 포함된 레시피를 제외해요</span>
-              </div>
-              <div class="allergy-chips" id="allergyChips">
+            <div class="slider-item">
+                <span class="slider-label">🧂 나트륨 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="15" class="pref-slider" data-key="sodium">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="sodium">15%</span>
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">⏱️ 조리시간 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="20" class="pref-slider" data-key="time">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="time">20%</span>
+            </div>
+        </div>
+
+        <div class="slider-total-row">
+            <span class="slider-total-label">합계</span>
+            <div class="slider-total-bar-bg">
+                <div class="slider-total-bar-fill" id="onboardTotalBar"></div>
+            </div>
+            <span class="slider-total-val" id="onboardTotal">100</span>
+            <span class="slider-total-unit">%</span>
+        </div>
+
+        <div class="onboard-actions">
+            <button id="onboardSave" class="btn-primary">이 설정으로 시작하기</button>
+            <button id="onboardSkip" class="btn-secondary">기본 설정으로 시작</button>
+        </div>
+    </div>
+</section>
+
+<!-- 메인 -->
+<section id="mainSection" style="display:none;">
+    <header class="app-header">
+        <div class="header-left">
+            <h1 class="app-title">🍳 레시피 추천</h1>
+        </div>
+        <div class="header-actions">
+            <button id="profileTabBtn" class="profile-tab-btn" style="display:none;" title="내 프로필">
+                👤 프로필
+            </button>
+            <button id="settingsBtn" class="settings-btn" style="display:none;" title="선호도 설정">
+                ⚙️ 설정
+            </button>
+        </div>
+    </header>
+
+    <div id="myProfileBar" class="profile-bar"></div>
+
+    <div class="search-row">
+        <input id="searchInput" type="text" placeholder="재료나 음식 이름으로 검색 (비워두면 전체 추천)" class="search-input">
+        <button id="searchBtn" class="btn-primary">검색</button>
+    </div>
+
+    <!-- 알레르기 필터 -->
+    <details class="allergy-section">
+        <summary class="allergy-summary">🚫 알레르기 필터</summary>
+        <div class="allergy-chips" id="allergyChips">
+            <label class="allergy-chip"><input type="checkbox" value="알류"> 알류(달걀)</label>
+            <label class="allergy-chip"><input type="checkbox" value="우유"> 우유</label>
+            <label class="allergy-chip"><input type="checkbox" value="메밀"> 메밀</label>
+            <label class="allergy-chip"><input type="checkbox" value="땅콩"> 땅콩</label>
+            <label class="allergy-chip"><input type="checkbox" value="대두"> 대두(콩)</label>
+            <label class="allergy-chip"><input type="checkbox" value="밀"> 밀</label>
+            <label class="allergy-chip"><input type="checkbox" value="고등어"> 고등어</label>
+            <label class="allergy-chip"><input type="checkbox" value="게"> 게</label>
+            <label class="allergy-chip"><input type="checkbox" value="새우"> 새우</label>
+            <label class="allergy-chip"><input type="checkbox" value="돼지고기"> 돼지고기</label>
+            <label class="allergy-chip"><input type="checkbox" value="복숭아"> 복숭아</label>
+            <label class="allergy-chip"><input type="checkbox" value="토마토"> 토마토</label>
+            <label class="allergy-chip"><input type="checkbox" value="아황산류"> 아황산류</label>
+            <label class="allergy-chip"><input type="checkbox" value="호두"> 호두</label>
+            <label class="allergy-chip"><input type="checkbox" value="닭고기"> 닭고기</label>
+            <label class="allergy-chip"><input type="checkbox" value="쇠고기"> 쇠고기</label>
+            <label class="allergy-chip"><input type="checkbox" value="오징어"> 오징어</label>
+            <label class="allergy-chip"><input type="checkbox" value="조개류"> 조개류</label>
+            <label class="allergy-chip"><input type="checkbox" value="잣"> 잣</label>
+            <label class="allergy-chip"><input type="checkbox" value="아몬드"> 아몬드</label>
+            <label class="allergy-chip"><input type="checkbox" value="캐슈넛"> 캐슈넛</label>
+            <label class="allergy-chip"><input type="checkbox" value="피스타치오"> 피스타치오</label>
+        </div>
+    </details>
+
+    <!-- 최근 먹은 음식 -->
+    <details class="history-section">
+        <summary class="allergy-summary">📋 최근 먹은 음식 (다양성 추천 반영)</summary>
+        <div class="history-input-row">
+            <input id="historyInput" type="text" placeholder="음식 이름 입력 (쉼표로 여러 개)" class="search-input" style="flex:1;">
+            <button id="historyAddBtn" class="btn-secondary">추가</button>
+        </div>
+        <div id="historyTags" class="history-tags"></div>
+    </details>
+
+    <div id="recipeListArea"></div>
+    <div id="detailArea"></div>
+</section>
+
+<!-- 설정 모달 -->
+<div id="settingsModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2>⚙️ 선호도 설정</h2>
+            <button id="settingsCancel" class="modal-close">✕</button>
+        </div>
+        <div class="sliders-wrap">
+            <div class="slider-item">
+                <span class="slider-label">💰 가격 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="25" class="pref-slider" data-key="price">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="price">25%</span>
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">💪 단백질 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="22" class="pref-slider" data-key="protein">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="protein">22%</span>
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">🔥 칼로리 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="18" class="pref-slider" data-key="calorie">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="calorie">18%</span>
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">🧂 나트륨 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="15" class="pref-slider" data-key="sodium">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="sodium">15%</span>
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">⏱️ 조리시간 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="20" class="pref-slider" data-key="time">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="time">20%</span>
+            </div>
+        </div>
+        <div class="slider-total-row">
+            <span class="slider-total-label">합계</span>
+            <div class="slider-total-bar-bg">
+                <div class="slider-total-bar-fill" id="settingsTotalBar"></div>
+            </div>
+            <span class="slider-total-val" id="settingsTotal">100</span>
+            <span class="slider-total-unit">%</span>
+        </div>
+        <div class="modal-actions">
+            <button id="settingsSave" class="btn-primary">저장하고 다시 추천</button>
+        </div>
+    </div>
+</div>
+<!-- 프로필 드로어 오버레이 -->
+<div id="profileDrawerOverlay" class="pd-overlay" style="display:none;"></div>
+
+<!-- 프로필 드로어 -->
+<aside id="profileDrawer" class="profile-drawer" style="display:none;">
+    <div class="pd-header">
+        <div class="pd-avatar" id="profileDrawerAvatar">🍽️</div>
+        <div class="pd-header-info">
+            <span class="pd-nickname" id="profileDrawerNickname">나의 프로필</span>
+        </div>
+        <button class="pd-close-btn" id="profileDrawerClose">✕</button>
+    </div>
+
+    <div class="pd-tabs">
+        <button class="pdtab active" data-tab="info">기본정보</button>
+        <button class="pdtab" data-tab="pref">선호도</button>
+        <button class="pdtab" data-tab="allergy">알레르기</button>
+        <button class="pdtab" data-tab="history">활동기록</button>
+    </div>
+
+    <!-- 기본정보 탭 -->
+    <div class="pdpanel active" id="pdpanel-info">
+        <div class="pd-section">
+            <p class="pd-label">닉네임</p>
+            <input id="nicknameInput" type="text" class="pd-nickname-input" maxlength="20" placeholder="닉네임 입력 (최대 20자)">
+        </div>
+        <div class="pd-section">
+            <p class="pd-label">아바타</p>
+            <div class="av-grid">
+                <span class="av-opt" data-emoji="🍽️">🍽️</span>
+                <span class="av-opt" data-emoji="🍳">🍳</span>
+                <span class="av-opt" data-emoji="🥘">🥘</span>
+                <span class="av-opt" data-emoji="🍜">🍜</span>
+                <span class="av-opt" data-emoji="🍱">🍱</span>
+                <span class="av-opt" data-emoji="🥗">🥗</span>
+                <span class="av-opt" data-emoji="🍣">🍣</span>
+                <span class="av-opt" data-emoji="🥩">🥩</span>
+                <span class="av-opt" data-emoji="🍕">🍕</span>
+                <span class="av-opt" data-emoji="🌮">🌮</span>
+                <span class="av-opt" data-emoji="🍛">🍛</span>
+                <span class="av-opt" data-emoji="🥟">🥟</span>
+            </div>
+        </div>
+        <div class="modal-actions" style="margin-top:12px;">
+            <button id="profileInfoSaveBtn" class="btn-primary">저장</button>
+        </div>
+    </div>
+
+    <!-- 선호도 탭 -->
+    <div class="pdpanel" id="pdpanel-pref">
+        <div class="sliders-wrap">
+            <div class="slider-item">
+                <span class="slider-label">💰 가격 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="25" class="pref-slider" data-key="price">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="price">25%</span>
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">💪 단백질 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="22" class="pref-slider" data-key="protein">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="protein">22%</span>
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">🔥 칼로리 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="18" class="pref-slider" data-key="calorie">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="calorie">18%</span>
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">🧂 나트륨 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="15" class="pref-slider" data-key="sodium">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="sodium">15%</span>
+            </div>
+            <div class="slider-item">
+                <span class="slider-label">⏱️ 조리시간 중요도</span>
+                <div class="slider-wrap">
+                    <span class="slider-end">낮음</span>
+                    <input type="range" min="0" max="100" value="20" class="pref-slider" data-key="time">
+                    <span class="slider-end">높음</span>
+                </div>
+                <span class="pref-val" data-for="time">20%</span>
+            </div>
+        </div>
+        <div class="slider-total-row">
+            <span class="slider-total-label">합계</span>
+            <div class="slider-total-bar-bg">
+                <div class="slider-total-bar-fill" id="profileTotalBar"></div>
+            </div>
+            <span class="slider-total-val" id="profileTotal">100</span>
+            <span class="slider-total-unit">%</span>
+        </div>
+        <div class="modal-actions" style="margin-top:12px;">
+            <button id="profilePrefSaveBtn" class="btn-primary">저장하고 다시 추천</button>
+        </div>
+    </div>
+
+    <!-- 알레르기 탭 -->
+    <div class="pdpanel" id="pdpanel-allergy">
+        <div class="pd-section">
+            <p class="pd-label">알레르기 설정</p>
+            <p class="pd-hint-text">선택한 재료가 포함된 레시피를 제외해요.</p>
+            <div class="allergy-chips" id="profileAllergyChips">
                 <label class="allergy-chip"><input type="checkbox" value="알류"> 알류(달걀)</label>
                 <label class="allergy-chip"><input type="checkbox" value="우유"> 우유</label>
                 <label class="allergy-chip"><input type="checkbox" value="메밀"> 메밀</label>
@@ -144,83 +357,26 @@
                 <label class="allergy-chip"><input type="checkbox" value="아몬드"> 아몬드</label>
                 <label class="allergy-chip"><input type="checkbox" value="캐슈넛"> 캐슈넛</label>
                 <label class="allergy-chip"><input type="checkbox" value="피스타치오"> 피스타치오</label>
-              </div>
-            </div>
-        </section>
-
-        <div id="recipeListArea"></div>
-        <div id="detailArea"></div>
-    </div>
-
-    <!-- 설정 모달 -->
-    <div id="settingsModal" class="modal-overlay" style="display:none;">
-        <div class="modal-card">
-            <h2 class="modal-title">선호도 설정 변경</h2>
-            <p class="modal-sub">중요도를 조정하면 추천 결과가 바뀝니다.</p>
-            <div class="pref-sliders" id="settingsSliders">
-                <div class="pref-row">
-                    <label>💰 가격</label>
-                    <div class="slider-wrap">
-                        <span class="slider-end">낮음</span>
-                        <input type="range" min="0" max="100" value="25" class="pref-slider" data-key="price">
-                        <span class="slider-end">높음</span>
-                    </div>
-                    <span class="pref-val" data-for="price">25%</span>
-                </div>
-                <div class="pref-row">
-                    <label>💪 단백질</label>
-                    <div class="slider-wrap">
-                        <span class="slider-end">낮음</span>
-                        <input type="range" min="0" max="100" value="22" class="pref-slider" data-key="protein">
-                        <span class="slider-end">높음</span>
-                    </div>
-                    <span class="pref-val" data-for="protein">22%</span>
-                </div>
-                <div class="pref-row">
-                    <label>🔥 칼로리</label>
-                    <div class="slider-wrap">
-                        <span class="slider-end">낮음</span>
-                        <input type="range" min="0" max="100" value="18" class="pref-slider" data-key="calorie">
-                        <span class="slider-end">높음</span>
-                    </div>
-                    <span class="pref-val" data-for="calorie">18%</span>
-                </div>
-                <div class="pref-row">
-                    <label>🧂 나트륨</label>
-                    <div class="slider-wrap">
-                        <span class="slider-end">낮음</span>
-                        <input type="range" min="0" max="100" value="15" class="pref-slider" data-key="sodium">
-                        <span class="slider-end">높음</span>
-                    </div>
-                    <span class="pref-val" data-for="sodium">15%</span>
-                </div>
-                <div class="pref-row">
-                    <label>⏱️ 조리시간</label>
-                    <div class="slider-wrap">
-                        <span class="slider-end">낮음</span>
-                        <input type="range" min="0" max="100" value="20" class="pref-slider" data-key="time">
-                        <span class="slider-end">높음</span>
-                    </div>
-                    <span class="pref-val" data-for="time">20%</span>
-                </div>
-            </div>
-
-            <div class="slider-total-row">
-                <span class="slider-total-label">합계</span>
-                <div class="slider-total-bar-bg">
-                    <div class="slider-total-bar-fill" id="settingsTotalBar"></div>
-                </div>
-                <span class="slider-total-val" id="settingsTotal">100</span>
-                <span class="slider-total-unit">%</span>
-            </div>
-
-            <div class="modal-actions">
-                <button id="settingsCancel" class="btn-secondary">취소</button>
-                <button id="settingsSave" class="btn-primary">저장하고 다시 추천</button>
             </div>
         </div>
     </div>
 
+    <!-- 활동기록 탭 -->
+    <div class="pdpanel" id="pdpanel-history">
+        <div class="pd-section">
+            <p class="pd-label">즐겨찾기</p>
+            <div id="pdFavoritesList" class="pd-activity-list">
+                <span class="pd-empty">즐겨찾기한 레시피가 없어요</span>
+            </div>
+        </div>
+        <div class="pd-section">
+            <p class="pd-label">최근 검색 / 조회</p>
+            <div id="pdRecentList" class="pd-activity-list">
+                <span class="pd-empty">아직 활동 기록이 없어요</span>
+            </div>
+        </div>
+    </div>
+</aside>
     <!--
       ★★★ features.js fetch 인터셉터 ★★★
       /api/recipe/recommend 호출 시 냉장고·시간대 파라미터를 자동 주입.
@@ -244,14 +400,14 @@
     </script>
 
     <!-- ★★★ features.js: 6가지 편의기능 ★★★ -->
-    <script src="/static/features.js?v=410"></script>
+    <script src="/static/features.js?v=500"></script>
 
     <script type="module">
         import {
             recommendRecipes, aiAnalyzeRecipe, getRecipeDetail,
-            createProfile, getProfile, updateProfileWeights, logFood
-        } from '/static/js/api.js?v=410';
-        import { renderRecipeList, renderLoading, renderDetail, renderError } from '/static/js/render.js?v=410';
+            createProfile, getProfile, updateProfileWeights, logFood, updateProfileInfo
+        } from '/static/js/api.js?v=500';
+        import { renderRecipeList, renderLoading, renderDetail, renderError } from '/static/js/render.js?v=500';
 
         const PRESETS = {
             '가성비':   { price: 40, protein: 18, calorie: 10, sodium: 7,  time: 25 },
@@ -287,6 +443,9 @@
             const sBt = document.getElementById('searchBtn');
             const lAr = document.getElementById('recipeListArea');
             const dAr = document.getElementById('detailArea');
+            const profileTabBtn = document.getElementById('profileTabBtn');
+            const profileDrawer = document.getElementById('profileDrawer');
+            const profileDrawerOverlay = document.getElementById('profileDrawerOverlay');
 
             let userId = getUid();
             let currentWeights = null;
@@ -420,9 +579,193 @@
                 onboarding.style.display  = 'none';
                 mainSection.style.display = 'block';
                 settingsBtn.style.display = 'inline-flex';
+                if (profileTabBtn) profileTabBtn.style.display = 'inline-flex';
                 renderProfileBar();
                 runSearch();
             }
+
+            // ── 프로필 드로어 ──────────────────────────────────────────
+            let _profileNickname = '';
+            let _profileEmoji    = '🍽️';
+
+            function openProfileDrawer() {
+                if (!profileDrawer) return;
+                profileDrawer.style.display = 'flex';
+                profileDrawerOverlay.style.display = 'block';
+                document.body.classList.add('drawer-open');
+                loadProfileDrawerData();
+            }
+            function closeProfileDrawer() {
+                if (!profileDrawer) return;
+                profileDrawer.style.display = 'none';
+                profileDrawerOverlay.style.display = 'none';
+                document.body.classList.remove('drawer-open');
+            }
+
+            // 탭 전환
+            document.querySelectorAll('.pdtab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.pdtab').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.pdpanel').forEach(p => p.classList.remove('active'));
+                    btn.classList.add('active');
+                    const panel = document.getElementById('pdpanel-' + btn.dataset.tab);
+                    if (panel) panel.classList.add('active');
+                });
+            });
+
+            // 아바타 선택
+            document.querySelectorAll('.av-opt').forEach(el => {
+                el.addEventListener('click', () => {
+                    document.querySelectorAll('.av-opt').forEach(e => e.classList.remove('selected'));
+                    el.classList.add('selected');
+                    _profileEmoji = el.dataset.emoji;
+                    const avatarEl = document.getElementById('profileDrawerAvatar');
+                    if (avatarEl) avatarEl.textContent = _profileEmoji;
+                });
+            });
+
+            // 프로필 드로어 슬라이더 바인딩
+            const profilePrefCtl = bindSliders(document.getElementById('profileDrawer'));
+
+            // 기본정보 저장
+            const profileInfoSaveBtn = document.getElementById('profileInfoSaveBtn');
+            if (profileInfoSaveBtn) {
+                profileInfoSaveBtn.addEventListener('click', async () => {
+                    const nicknameInput = document.getElementById('nicknameInput');
+                    const nn = nicknameInput ? nicknameInput.value.trim() : '';
+                    if (!userId) return;
+                    try {
+                        profileInfoSaveBtn.disabled = true;
+                        profileInfoSaveBtn.textContent = '저장 중...';
+                        const p = await updateProfileInfo(userId, nn, _profileEmoji);
+                        _profileNickname = p.nickname || '';
+                        _profileEmoji    = p.avatar_emoji || '🍽️';
+                        updateProfileDrawerHeader();
+                        if (typeof window.showToast === 'function') window.showToast('프로필이 저장되었습니다 ✅');
+                    } catch (e) {
+                        console.error('[프로필 저장 실패]', e);
+                        if (typeof window.showToast === 'function') window.showToast('저장에 실패했습니다');
+                    } finally {
+                        profileInfoSaveBtn.disabled = false;
+                        profileInfoSaveBtn.textContent = '저장';
+                    }
+                });
+            }
+
+            // 선호도 저장 (프로필 드로어 내)
+            const profilePrefSaveBtn = document.getElementById('profilePrefSaveBtn');
+            if (profilePrefSaveBtn) {
+                profilePrefSaveBtn.addEventListener('click', async () => {
+                    currentWeights = normalize(profilePrefCtl.getRaw());
+                    if (userId) {
+                        try {
+                            const p = await updateProfileWeights(userId, currentWeights);
+                            currentWeights = p.weights;
+                        } catch (e) { console.error('[가중치 저장 실패]', e); }
+                    }
+                    renderProfileBar();
+                    closeProfileDrawer();
+                    runSearch();
+                });
+            }
+
+            // 알레르기 동기화 (프로필 드로어 ↔ 메인 패널)
+            function syncAllergyDrawerToMain() {
+                const drawerChips = document.querySelectorAll('#profileAllergyChips input');
+                const mainChips   = document.querySelectorAll('#allergyChips input');
+                drawerChips.forEach(dc => {
+                    const mc = [...mainChips].find(m => m.value === dc.value);
+                    if (mc) mc.checked = dc.checked;
+                });
+                runSearch();
+            }
+            function syncAllergyMainToDrawer() {
+                const drawerChips = document.querySelectorAll('#profileAllergyChips input');
+                const mainChips   = document.querySelectorAll('#allergyChips input');
+                drawerChips.forEach(dc => {
+                    const mc = [...mainChips].find(m => m.value === dc.value);
+                    if (mc) dc.checked = mc.checked;
+                });
+            }
+            document.querySelectorAll('#profileAllergyChips input').forEach(cb => {
+                cb.addEventListener('change', syncAllergyDrawerToMain);
+            });
+
+            function updateProfileDrawerHeader() {
+                const avatarEl   = document.getElementById('profileDrawerAvatar');
+                const nicknameEl = document.getElementById('profileDrawerNickname');
+                if (avatarEl)   avatarEl.textContent   = _profileEmoji || '🍽️';
+                if (nicknameEl) nicknameEl.textContent = _profileNickname || '나의 프로필';
+            }
+
+            async function loadProfileDrawerData() {
+                // 닉네임/이모지 복원
+                const nicknameInput = document.getElementById('nicknameInput');
+                if (nicknameInput) nicknameInput.value = _profileNickname;
+                document.querySelectorAll('.av-opt').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.emoji === _profileEmoji);
+                });
+                updateProfileDrawerHeader();
+
+                // 선호도 슬라이더 복원
+                if (currentWeights) {
+                    profilePrefCtl.setRaw({
+                        price:   Math.round((currentWeights.price   ?? 0) * 100),
+                        protein: Math.round((currentWeights.protein ?? 0) * 100),
+                        calorie: Math.round((currentWeights.calorie ?? 0) * 100),
+                        sodium:  Math.round((currentWeights.sodium  ?? 0) * 100),
+                        time:    Math.round((currentWeights.time    ?? 0) * 100),
+                    });
+                }
+
+                // 알레르기 메인 → 드로어 동기화
+                syncAllergyMainToDrawer();
+
+                // 활동기록 렌더
+                renderActivityHistory();
+            }
+
+            function renderActivityHistory() {
+                // 즐겨찾기
+                const favList = document.getElementById('pdFavoritesList');
+                if (favList && window.Favorites) {
+                    try {
+                        const favs = window.Favorites.getAll ? window.Favorites.getAll() : [];
+                        if (favs.length === 0) {
+                            favList.innerHTML = '<span class="pd-empty">즐겨찾기한 레시피가 없어요</span>';
+                        } else {
+                            favList.innerHTML = favs.map(f => `
+                                <div class="pd-activity-item">
+                                    <span class="pd-activity-name">${f.name || '레시피'}</span>
+                                    <button class="pd-go-btn" onclick="window.runSelectById('${f.id}','${f.name}');closeProfileDrawer();">보기</button>
+                                </div>`).join('');
+                        }
+                    } catch (e) {
+                        favList.innerHTML = '<span class="pd-empty">즐겨찾기 정보를 불러오지 못했어요</span>';
+                    }
+                }
+
+                // 최근 음식 로그
+                const recentList = document.getElementById('pdRecentList');
+                if (recentList) {
+                    if (foodHistory.length === 0) {
+                        recentList.innerHTML = '<span class="pd-empty">아직 활동 기록이 없어요</span>';
+                    } else {
+                        recentList.innerHTML = foodHistory.slice(0, 10).map(f => `
+                            <div class="pd-activity-item">
+                                <span class="pd-activity-name">${f}</span>
+                                <button class="pd-go-btn" onclick="document.getElementById('searchInput').value='${f}';closeProfileDrawer();runSearch();">검색</button>
+                            </div>`).join('');
+                    }
+                }
+            }
+
+            window.closeProfileDrawer = closeProfileDrawer;
+
+            if (profileTabBtn) profileTabBtn.addEventListener('click', openProfileDrawer);
+            if (profileDrawerOverlay) profileDrawerOverlay.addEventListener('click', closeProfileDrawer);
+            const pdClose = document.getElementById('profileDrawerClose');
+            if (pdClose) pdClose.addEventListener('click', closeProfileDrawer);
 
             async function runSearch() {
                 dAr.innerHTML = '';
@@ -437,7 +780,7 @@
                     if (foodHistory.length > 0) opts.history = foodHistory;
                     const checkedAllergens = [...document.querySelectorAll('#allergyChips input:checked')].map(el => el.value);
                     if (checkedAllergens.length) opts.allergens = checkedAllergens;
-                    const data = await recommendRecipes(sIn.value, '기본', 20, opts);
+                    const data = await recommendRecipes(sIn.value, '기본', 50, opts);
                     personalizedByLog = data.length > 0 && data[0].personalized_by_log === true;
                     renderProfileBar();
                     renderRecipeList(data, lAr, runSelect, '맞춤');
@@ -602,6 +945,9 @@
                 try {
                     const p = await getProfile(userId);
                     currentWeights = p.weights;
+                    _profileNickname = p.nickname || '';
+                    _profileEmoji    = p.avatar_emoji || '🍽️';
+                    updateProfileDrawerHeader();
                     enterMain();
                 } catch (e) {
                     console.warn('[프로필 없음, 온보딩 표시]', e);

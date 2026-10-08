@@ -74,6 +74,8 @@ def create_profile(weights: Optional[Dict[str, float]] = None) -> dict:
     now = time.time()
     profile = {
         "user_id": uid,
+        "nickname": "",
+        "avatar_emoji": "🍽️",
         "weights": _normalize(weights) if weights else dict(DEFAULT_WEIGHTS),
         "food_log": [],
         "created_at": now,
@@ -117,6 +119,20 @@ def add_food_log(user_id: str, food_name: str) -> Optional[dict]:
         log = [e for e in log if e.get("name") != food_name]
         log.insert(0, {"name": food_name, "ts": time.time()})
         p["food_log"] = log[:MAX_LOG]
+        p["updated_at"] = time.time()
+        _save_all(data)
+        return p
+
+
+def update_info(user_id: str, nickname: str, avatar_emoji: str) -> Optional[dict]:
+    """닉네임 / 아바타 이모지 변경."""
+    with _lock:
+        data = _load_all()
+        p = data.get(user_id)
+        if not p:
+            return None
+        p["nickname"] = nickname[:20]  # 최대 20자
+        p["avatar_emoji"] = avatar_emoji or "🍽️"
         p["updated_at"] = time.time()
         _save_all(data)
         return p
