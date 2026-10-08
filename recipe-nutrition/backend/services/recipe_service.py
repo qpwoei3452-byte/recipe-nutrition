@@ -882,8 +882,8 @@ async def search_recipes(query: str) -> List[Dict]:
     # 두 결과를 합산하면 "토마토" 검색 시 "방울토마토" 재료 레시피도 나온다.
     async with httpx.AsyncClient(timeout=15) as client:
         if query:
-            name_url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/100/RCP_NM={quote(query)}"
-            ing_url  = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/100/RCP_PARTS_DTLS={quote(query)}"
+            name_url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/1000/RCP_NM={quote(query)}"
+            ing_url  = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/1000/RCP_PARTS_DTLS={quote(query)}"
             print(f"[search_recipes] name_url={name_url}")
             print(f"[search_recipes] ing_url={ing_url}")
             name_rows, ing_rows = await asyncio.gather(
@@ -900,7 +900,7 @@ async def search_recipes(query: str) -> List[Dict]:
                     rows.append(r)
         else:
             # 빈 검색 → 전체 추천용
-            browse_url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/100"
+            browse_url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/1000"
             print(f"[search_recipes] browse_url={browse_url}")
             rows = await _fetch_by_url(client, browse_url, "browse")
 
