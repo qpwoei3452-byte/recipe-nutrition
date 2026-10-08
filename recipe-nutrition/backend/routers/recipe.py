@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional
-import asyncio
+import asyncio  # history 검색 등 다른 await에서 필요
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -81,12 +81,10 @@ async def recommend_recipes(
     if not summaries:
         return []
 
-    # Railway 타임아웃 방지: 최대 300개만 처리
-    summaries = summaries[:300]
-
-    tasks   = [recipe_service.get_recipe_detail(r["id"], r["name"], allow_ai=False)
-               for r in summaries]
-    details = await asyncio.gather(*tasks)
+    # [FIX] asyncio.gather(get_recipe_detail × N) 방식 제거 → Railway 타임아웃 원인
+    # 캐시된 raw MFDS 데이터에서 추천 점수 계산에 필요한 필드만 직접 추출(동기).
+    # _format()의 재료별 영양·가격 API 호출이 없어서 수십 배 빠름.
+    details = [recipe_service.get_recipe_for_scoring(r["id"]) for r in summaries]
     details = [d for d in details if d]
 
     cook_time_estimator.enrich_with_cook_time(details)
