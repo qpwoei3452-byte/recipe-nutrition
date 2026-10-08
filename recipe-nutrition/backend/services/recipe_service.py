@@ -900,7 +900,7 @@ async def search_recipes(query: str) -> List[Dict]:
                     rows.append(r)
         else:
             # 빈 검색 → 전체 추천용
-            browse_url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/1000"
+            browse_url = f"{BASE_URL}/{MY_API_KEY}/COOKRCP01/json/1/300"
             print(f"[search_recipes] browse_url={browse_url}")
             rows = await _fetch_by_url(client, browse_url, "browse")
 

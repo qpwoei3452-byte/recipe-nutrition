@@ -49,12 +49,7 @@ class RecipeDetail(BaseModel):
     ingredients: List[Dict[str, Any]] = Field(default_factory=list)
     nutrition_total: NutritionTotal = Field(default_factory=NutritionTotal)
     price_total_krw: float = 0.0
-    # [FIX] 재료비가 몇 인분 기준인지 알 수 없어, 재료 총 중량을 함께 내려
-    # 화면에서 "재료 OOOg 기준"으로 표시한다. response_model이 선언되지 않은
-    # 필드를 걸러내므로 여기에도 추가해야 한다.
     total_ingredient_g: float = 0.0
-    # 재료 분량이 몇 인분인지. 식약처 INFO_WGT가 없는 레시피는 None이며
-    # 화면에서 인분 표시를 생략한다.
     servings: Optional[int] = None
     errors: List[str] = Field(default_factory=list)
 
@@ -77,19 +72,18 @@ async def recommend_recipes(
     w_sodium:     Optional[float] = Query(default=None),
     w_time:       Optional[float] = Query(default=None),
     allergens:    str   = "",
-    time_slot:    Optional[str]   = None,   # "아침"|"점심"|"저녁"|"야식"
-    fridge:       str   = "",               # 냉장고 재료 콤마 구분
-    fridge_only:  bool  = False,            # (구버전 호환) True면 fridge_mode="any"
-    fridge_mode:  str   = "boost",          # boost | any | mostly
+    time_slot:    Optional[str]   = None,
+    fridge:       str   = "",
+    fridge_only:  bool  = False,
+    fridge_mode:  str   = "boost",
 ):
     summaries = await recipe_service.search_recipes(q)
     if not summaries:
         return []
 
-    # [FIX] 추천 목록 단계에서는 재료별 AI 영양 추정을 하지 않는다(allow_ai=False).
-    # 추천 점수는 식약처가 레시피 단위로 주는 값만 쓰므로 AI 결과가 필요 없는데,
-    # 기존에는 검색 한 번에 AI를 40회 이상 호출해 할당량을 소진시켰고,
-    # 그 탓에 상세 화면의 "쉽게 보기"·조리시간 분석이 실패했다.
+    # Railway 타임아웃 방지: 최대 300개만 처리
+    summaries = summaries[:300]
+
     tasks   = [recipe_service.get_recipe_detail(r["id"], r["name"], allow_ai=False)
                for r in summaries]
     details = await asyncio.gather(*tasks)
@@ -174,8 +168,6 @@ async def recommend_recipes(
         print(f"[recommend] 알레르기 필터링 후: {len(details)}개")
 
     fridge_items   = [f.strip() for f in (fridge or "").split(",") if f.strip()]
-    # [FIX] 예전에는 user_id 없이 호출해 모든 사용자의 별점을 끌어왔다.
-    # 다른 사람이 준 별점이 내 추천 순위를 바꾸는 상태였다.
     liked_names    = user_data_service.get_liked_recipes(user_id or "")
     disliked_names = user_data_service.get_disliked_recipes(user_id or "")
 
