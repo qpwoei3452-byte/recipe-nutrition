@@ -63,7 +63,7 @@ async def search(q: str = ""):
 async def recommend_recipes(
     q:            str   = "",
     mode:         str   = "기본",
-    top_n:        int   = 0,
+    top_n:        int   = 20,
     user_id:      Optional[str]   = None,
     history:      str   = "",
     w_price:      Optional[float] = Query(default=None),

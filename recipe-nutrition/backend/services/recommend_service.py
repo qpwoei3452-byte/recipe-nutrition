@@ -355,6 +355,8 @@ def mmr_rerank(
 ) -> List[Dict]:
     if not recipes:
         return []
+    if top_n <= 0:          # [FIX] top_n=0이면 결과가 항상 빈 배열이 되는 버그 방지
+        top_n = 20
     history = history_recipes or []
     candidates = list(recipes)
     selected: List[Dict] = []
