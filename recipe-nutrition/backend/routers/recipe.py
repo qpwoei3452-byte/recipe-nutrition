@@ -11,7 +11,7 @@ from services import profile_service
 from services import cook_time_estimator
 from services import allergy_service
 from services import cook_steps_service
-from services import user_data_service   # ← 추가
+from services import user_data_service
 
 router = APIRouter(prefix="/api/recipe", tags=["recipe"])
 
@@ -77,15 +77,23 @@ async def recommend_recipes(
     fridge_only:  bool  = False,
     fridge_mode:  str   = "boost",
 ):
+    print(f"[recommend] 시작 q={repr(q)}")
     summaries = await recipe_service.search_recipes(q)
+    print(f"[recommend] summaries={len(summaries)}건")
     if not summaries:
+        print("[recommend] summaries 비어있음 → [] 반환")
         return []
 
-    # [FIX] asyncio.gather(get_recipe_detail × N) 방식 제거 → Railway 타임아웃 원인
-    # 캐시된 raw MFDS 데이터에서 추천 점수 계산에 필요한 필드만 직접 추출(동기).
-    # _format()의 재료별 영양·가격 API 호출이 없어서 수십 배 빠름.
+    # [FIX] asyncio.gather(get_recipe_detail × N) 완전 제거
+    # 캐시된 raw MFDS 데이터에서 점수 계산 필드만 동기로 직접 추출.
+    # HTTP 호출 0회 → 타임아웃 없음.
     details = [recipe_service.get_recipe_for_scoring(r["id"]) for r in summaries]
     details = [d for d in details if d]
+    print(f"[recommend] details={len(details)}건 (캐시 추출)")
+
+    if not details:
+        print("[recommend] details 비어있음 → [] 반환")
+        return []
 
     cook_time_estimator.enrich_with_cook_time(details)
 
@@ -169,7 +177,7 @@ async def recommend_recipes(
     liked_names    = user_data_service.get_liked_recipes(user_id or "")
     disliked_names = user_data_service.get_disliked_recipes(user_id or "")
 
-    return recommend_service.recommend(
+    result = recommend_service.recommend(
         details,
         mode=mode,
         top_n=top_n,
@@ -189,6 +197,8 @@ async def recommend_recipes(
         liked_recipe_names=liked_names,
         disliked_recipe_names=disliked_names,
     )
+    print(f"[recommend] 최종 결과 {len(result)}건")
+    return result
 
 
 @router.get("/{recipe_id}/detail", response_model=RecipeDetail)
